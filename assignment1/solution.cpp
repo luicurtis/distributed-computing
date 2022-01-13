@@ -40,7 +40,10 @@ ProducerConsumerProblem::ProducerConsumerProblem(long _n_items,
     producer_threads = new pthread_t[n_producers];
   }
 
-  // Initialize all mutex and conditional variables here.
+  // TODO: Initialize all mutex and conditional variables here.
+  pthread_mutex_init(&buffer_mut, NULL);
+  pthread_cond_init(&buffer_full, NULL);
+  pthread_cond_init(&buffer_empty, NULL);
 }
 
 ProducerConsumerProblem::~ProducerConsumerProblem() {
@@ -53,7 +56,10 @@ ProducerConsumerProblem::~ProducerConsumerProblem() {
     delete[] consumers;
     delete[] consumer_threads;
   }
-  // Destroy all mutex and conditional variables here.
+  // TODO: Destroy all mutex and conditional variables here.
+  pthread_mutex_destroy(&buffer_mut);
+  pthread_cond_destroy(&buffer_full);
+  pthread_cond_destroy(&buffer_empty);
 }
 
 void ProducerConsumerProblem::startProducers() {

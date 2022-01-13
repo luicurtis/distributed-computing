@@ -30,6 +30,9 @@ class ProducerConsumerProblem {
   int active_consumer_count;
 
  // define any other members, mutexes, condition variables here
+  pthread_mutex_t buffer_mut;
+  pthread_cond_t buffer_full;
+  pthread_cond_t buffer_empty;
 
 public:
   // The following 6 methods should be defined in the implementation file (solution.cpp)
