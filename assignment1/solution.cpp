@@ -1,6 +1,6 @@
 #include "solution.h"
 
-void producerFunction(void *_arg) {
+void *producerFunction(void *_arg) {
   // Parse the _arg passed to the function.
   // Enqueue `n` items into the `production_buffer`. The items produced should
   // be 0, 1, 2,..., (n-1).
@@ -11,7 +11,7 @@ void producerFunction(void *_arg) {
   // Use mutex variables and conditional variables as necessary.
 }
 
-void consumerFunction(void *_arg) {
+void *consumerFunction(void *_arg) {
   // Parse the _arg passed to the function.
   // The consumer thread will consume items by dequeueing the items from the
   // `production_buffer`.
