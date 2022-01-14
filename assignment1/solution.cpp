@@ -17,8 +17,22 @@ void *consumerFunction(void *_arg) {
   // `production_buffer`.
   // Keep track of the number of items consumed and their value and type
   // Once the productions is complete and the queue is also empty, the thread
-  // will exit. NOTE: The number of items consumed by each thread need not be the same
-  // Use mutex variables and conditional variables as necessary.
+Producer::Producer() {
+  item_start_val = 0;
+  increment_val = 0;
+  np = 0;
+  num_type_0 = 0;
+  num_type_1 = 0;
+  num_type_2 = 0;
+  buffer = nullptr;
+  buffer_mut = nullptr;
+  buffer_full = nullptr;
+  buffer_empty = nullptr;
+}
+
+Producer::~Producer() {
+  // TODO: Free data if it has (it shouldnt have anything)
+}
 }
 
 ProducerConsumerProblem::ProducerConsumerProblem(long _n_items,
@@ -65,9 +79,41 @@ ProducerConsumerProblem::~ProducerConsumerProblem() {
 void ProducerConsumerProblem::startProducers() {
   std::cout << "Starting Producers\n";
   active_producer_count = n_producers;
-  // Compute number of items for each thread, and number of items per type per thread
+  // TODO: Compute number of items for each thread, and number of items per type
+  // per thread
+  long np = n_items / n_producers;
+  long num_type_0 = np / 2;
+  long num_type_1 = np / 3;
+  long num_type_2 = np - num_type_0 - num_type_1;
 
-  // Create producer threads P1, P2, P3,.. using pthread_create.
+  // TODO: Create producer threads P1, P2, P3,.. using pthread_create.
+  for (int i = 0; i < n_producers; i++) {
+    // Check if Producer 0 needs to produce 1 extra item
+    if (i == 0 && n_items % n_producers) {
+      producers[i].item_start_val = 0;
+      producers[i].increment_val = n_producers;
+      producers[i].np = np + 1;
+      producers[i].num_type_0 = (np + 1) / 2;
+      producers[i].num_type_1 = (np + 1) / 3;
+      producers[i].num_type_2 =
+          np + 1 - producers[i].num_type_0 - producers[i].num_type_1;
+    } else {
+      producers[i].item_start_val = 0;
+      producers[i].increment_val = n_producers;
+      producers[i].np = np;
+      producers[i].num_type_0 = num_type_0;
+      producers[i].num_type_1 = num_type_1;
+      producers[i].num_type_2 = num_type_2;
+    }
+
+    producers[i].buffer = &production_buffer;
+    producers[i].buffer_mut = &buffer_mut;
+    producers[i].buffer_full = &buffer_full;
+    producers[i].buffer_empty = &buffer_empty;
+
+    pthread_create(&producer_threads[i], NULL, producerFunction,
+                   (void *)&producers[i]);
+  }
 }
 
 void ProducerConsumerProblem::startConsumers() {
