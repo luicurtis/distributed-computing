@@ -13,6 +13,9 @@ class Producer {
   long num_type_0;
   long num_type_1;
   long num_type_2;
+  long val_type_0;
+  long val_type_1;
+  long val_type_2;
 
   CircularQueue *buffer;
   pthread_mutex_t *buffer_mut;

@@ -28,6 +28,9 @@ Producer::Producer() {
   buffer_mut = nullptr;
   buffer_full = nullptr;
   buffer_empty = nullptr;
+  val_type_0 = 0;
+  val_type_1 = 0;
+  val_type_2 = 0;
 }
 
 Producer::~Producer() {
