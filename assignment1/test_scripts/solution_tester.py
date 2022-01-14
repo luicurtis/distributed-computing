@@ -79,7 +79,7 @@ def runTests(testCase, testCaseNum):
     print(" ".join(commandArray))
     res = subprocess.call(commandArray, stdout=scratchFile)
     scratchFile.close()
-    print("Test case %d exited with exit code : {}".format(res)) %testCaseNum
+    print("Test case %d exited with exit code : {}".format(res) %testCaseNum)
     print("Evaluating Test case {}...".format(testCaseNum))
     sys.stdout.flush()
 
