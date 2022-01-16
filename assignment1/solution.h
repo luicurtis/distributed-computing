@@ -7,20 +7,21 @@
 class Producer {
  public:
     // Define Producer Class here
+  int id;
   int item_start_val;  // starting item value for the producer
   int increment_val;   // increment value for the items
+  double time_taken;
   long np;             // # of items to produce
-  long num_type_0;
-  long num_type_1;
-  long num_type_2;
-  long val_type_0;
-  long val_type_1;
-  long val_type_2;
+  long num_type[3];
+  long val_type[3];
 
   CircularQueue *buffer;
   pthread_mutex_t *buffer_mut;
+  pthread_mutex_t *active_count_mut;
   pthread_cond_t *buffer_full;
   pthread_cond_t *buffer_empty;
+  int *active_count;
+
   Producer();
   ~Producer();
 };
@@ -63,6 +64,7 @@ class ProducerConsumerProblem {
 
  // define any other members, mutexes, condition variables here
   pthread_mutex_t buffer_mut;
+  pthread_mutex_t producer_count_mut;
   pthread_cond_t buffer_full;
   pthread_cond_t buffer_empty;
 

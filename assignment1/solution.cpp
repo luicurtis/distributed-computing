@@ -2,6 +2,8 @@
 
 void *producerFunction(void *_arg) {
   // Parse the _arg passed to the function.
+  Producer *producer = (Producer *)_arg;
+
   // Enqueue `n` items into the `production_buffer`. The items produced should
   // be 0, 1, 2,..., (n-1).
   // Keep track of the number of items produced, their type 
@@ -9,6 +11,66 @@ void *producerFunction(void *_arg) {
   // The producer that was last active should ensure that all the consumers have
   // finished. NOTE: Each thread will enqueue `n` items.
   // Use mutex variables and conditional variables as necessary.
+
+  // TODO: Implement this function
+  // Each producer enqueues `np` items where np=n/nProducers except for producer
+  // 0
+  timer t;
+  t.start();
+  long item_val = producer->item_start_val;
+  long items_produced = 0;
+  int cur_type = 0;
+
+  while (items_produced < producer->np) {
+    for (int i = 0; i < producer->num_type[cur_type]; i++) {
+      CircularQueueEntry item = {item_val, cur_type, producer->id};
+
+      // acquire lock on buffer and try to add to buffer
+      pthread_mutex_lock(producer->buffer_mut);
+      bool ret = producer->buffer->enqueue(item.value, item.type, item.source);
+
+      if (ret == false) {
+        // buffer is full, wait until there is room on the buffer
+        // NOTE: pthread_cont_wait() will release the mutex
+        pthread_cond_wait(producer->buffer_full, producer->buffer_mut);
+      }
+
+      if (producer->buffer->itemCount() == 1) {
+        // The queue is no longer empty
+        // Signal all consumers indicating queue is not empty
+        pthread_cond_signal(producer->buffer_empty);
+      }
+
+      // unlock the buffer mutex
+      pthread_mutex_unlock(producer->buffer_mut);
+
+      // update stat variables
+      items_produced++;
+      producer->val_type[cur_type] += item_val;
+      item_val += producer->increment_val;  // increment next item val
+    }
+    cur_type++;  // increment to go through next item type
+  }
+
+  // After production is completed:
+  // Update the number of producers that are currently active.
+  pthread_mutex_lock(producer->active_count_mut);
+  *producer->active_count -= 1;
+
+  if (*producer->active_count == 0) {
+    // TODO: The producer that was last active (can be determined using
+    // `active_producer_count`) will keep signalling the consumers until all
+    // consumers have finished (can be determined using
+    // `active_consumer_count`).
+  }
+
+  // unlock the producer count mutex
+  pthread_mutex_unlock(producer->active_count_mut);
+
+  double time_taken = t.stop();
+  producer->time_taken = time_taken;
+
+  return nullptr;
 }
 
 void *consumerFunction(void *_arg) {
@@ -18,19 +80,17 @@ void *consumerFunction(void *_arg) {
   // Keep track of the number of items consumed and their value and type
   // Once the productions is complete and the queue is also empty, the thread
 Producer::Producer() {
+  id = -1;
   item_start_val = 0;
   increment_val = 0;
+  time_taken = 0.0;
   np = 0;
-  num_type_0 = 0;
-  num_type_1 = 0;
-  num_type_2 = 0;
   buffer = nullptr;
   buffer_mut = nullptr;
+  active_count_mut = nullptr;
   buffer_full = nullptr;
   buffer_empty = nullptr;
-  val_type_0 = 0;
-  val_type_1 = 0;
-  val_type_2 = 0;
+  active_count = nullptr;
 }
 
 Producer::~Producer() {
@@ -92,6 +152,7 @@ ProducerConsumerProblem::~ProducerConsumerProblem() {
   }
   // TODO: Destroy all mutex and conditional variables here.
   pthread_mutex_destroy(&buffer_mut);
+  pthread_mutex_destroy(&producer_count_mut);
   pthread_cond_destroy(&buffer_full);
   pthread_cond_destroy(&buffer_empty);
 }
@@ -99,37 +160,39 @@ ProducerConsumerProblem::~ProducerConsumerProblem() {
 void ProducerConsumerProblem::startProducers() {
   std::cout << "Starting Producers\n";
   active_producer_count = n_producers;
-  // TODO: Compute number of items for each thread, and number of items per type
+  // Compute number of items for each thread, and number of items per type
   // per thread
   long np = n_items / n_producers;
   long num_type_0 = np / 2;
   long num_type_1 = np / 3;
   long num_type_2 = np - num_type_0 - num_type_1;
 
-  // TODO: Create producer threads P1, P2, P3,.. using pthread_create.
+  // Create producer threads P1, P2, P3,.. using pthread_create.
   for (int i = 0; i < n_producers; i++) {
     // Check if Producer 0 needs to produce 1 extra item
     if (i == 0 && n_items % n_producers) {
-      producers[i].item_start_val = 0;
-      producers[i].increment_val = n_producers;
       producers[i].np = np + 1;
-      producers[i].num_type_0 = (np + 1) / 2;
-      producers[i].num_type_1 = (np + 1) / 3;
-      producers[i].num_type_2 =
-          np + 1 - producers[i].num_type_0 - producers[i].num_type_1;
+      producers[i].num_type[0] = (np + 1) / 2;
+      producers[i].num_type[1] = (np + 1) / 3;
+      producers[i].num_type[2] =
+          np + 1 - producers[i].num_type[0] - producers[i].num_type[1];
     } else {
-      producers[i].item_start_val = 0;
-      producers[i].increment_val = n_producers;
       producers[i].np = np;
-      producers[i].num_type_0 = num_type_0;
-      producers[i].num_type_1 = num_type_1;
-      producers[i].num_type_2 = num_type_2;
+      producers[i].num_type[0] = num_type_0;
+      producers[i].num_type[1] = num_type_1;
+      producers[i].num_type[2] = num_type_2;
     }
 
+    producers[i].id = i;
+    producers[i].item_start_val = i;
+    producers[i].increment_val = n_producers;
     producers[i].buffer = &production_buffer;
     producers[i].buffer_mut = &buffer_mut;
     producers[i].buffer_full = &buffer_full;
     producers[i].buffer_empty = &buffer_empty;
+    producers[i].active_count = &active_producer_count;
+
+    // TODO: Check that np == num_type[0] + num_type[1] + num_type[2]
 
     pthread_create(&producer_threads[i], NULL, producerFunction,
                    (void *)&producers[i]);
