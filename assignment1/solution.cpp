@@ -36,6 +36,23 @@ Producer::Producer() {
 Producer::~Producer() {
   // TODO: Free data if it has (it shouldnt have anything)
 }
+
+Consumer::Consumer() {
+  time_taken = 0.0;
+  num_type_0 = 0;
+  num_type_2 = 0;
+  num_type_1 = 0;
+  val_type_0 = 0;
+  val_type_1 = 0;
+  val_type_2 = 0;
+  buffer = nullptr;
+  buffer_mut = nullptr;
+  buffer_full = nullptr;
+  buffer_empty = nullptr;
+}
+
+Consumer::~Consumer() {
+  // TODO: Free data if it has (it shouldnt have anything)
 }
 
 ProducerConsumerProblem::ProducerConsumerProblem(long _n_items,
@@ -122,7 +139,17 @@ void ProducerConsumerProblem::startProducers() {
 void ProducerConsumerProblem::startConsumers() {
   std::cout << "Starting Consumers\n";
   active_consumer_count = n_consumers;
+
   // Create consumer threads C1, C2, C3,.. using pthread_create.
+  for (int i = 0; i < n_consumers; i++) {
+    // set Consumer pointers
+    consumers[i].buffer = &production_buffer;
+    consumers[i].buffer_mut = &buffer_mut;
+    consumers[i].buffer_full = &buffer_full;
+    consumers[i].buffer_empty = &buffer_empty;
+    pthread_create(&consumer_threads[i], NULL, consumerFunction,
+                   (void *)&consumers[i]);
+  }
 }
 
 void ProducerConsumerProblem::joinProducers() {

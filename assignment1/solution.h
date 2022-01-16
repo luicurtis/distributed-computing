@@ -27,6 +27,21 @@ class Producer {
 
 class Consumer {
     // Define Producer Class here
+  double time_taken;
+  long num_type_0;
+  long num_type_1;
+  long num_type_2;
+  long val_type_0;
+  long val_type_1;
+  long val_type_2;
+
+  CircularQueue *buffer;
+  pthread_mutex_t *buffer_mut;
+  pthread_cond_t *buffer_full;
+  pthread_cond_t *buffer_empty;
+
+  Consumer();
+  ~Consumer();
 };
 
 class ProducerConsumerProblem {
