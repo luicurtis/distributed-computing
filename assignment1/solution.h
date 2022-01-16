@@ -1,12 +1,14 @@
-#include "core/circular_queue.h"
-#include "core/utils.h"
-#include <iomanip>
 #include <pthread.h>
 #include <stdlib.h>
 
+#include <iomanip>
+
+#include "core/circular_queue.h"
+#include "core/utils.h"
+
 class Producer {
  public:
-    // Define Producer Class here
+  // Define Producer Class here
   int id;
   int item_start_val;  // starting item value for the producer
   int increment_val;   // increment value for the items
@@ -17,29 +19,34 @@ class Producer {
 
   CircularQueue *buffer;
   pthread_mutex_t *buffer_mut;
-  pthread_mutex_t *active_count_mut;
+  pthread_mutex_t *active_producer_count_mut;
+  pthread_mutex_t *active_consumer_count_mut;
   pthread_cond_t *buffer_full;
   pthread_cond_t *buffer_empty;
-  int *active_count;
+  int *active_producer_count;
+  int *active_consumer_count;
 
   Producer();
   ~Producer();
 };
 
 class Consumer {
-    // Define Producer Class here
+ public:
+  // Define Producer Class here
   double time_taken;
-  long num_type_0;
-  long num_type_1;
-  long num_type_2;
-  long val_type_0;
-  long val_type_1;
-  long val_type_2;
+  long num_type[3];
+  long val_type[3];
 
   CircularQueue *buffer;
   pthread_mutex_t *buffer_mut;
+  pthread_mutex_t *active_producer_count_mut;
+  pthread_mutex_t *active_consumer_count_mut;
   pthread_cond_t *buffer_full;
   pthread_cond_t *buffer_empty;
+  int *active_producer_count;
+  int *active_consumer_count;
+
+
 
   Consumer();
   ~Consumer();
@@ -62,14 +69,16 @@ class ProducerConsumerProblem {
   int active_producer_count;
   int active_consumer_count;
 
- // define any other members, mutexes, condition variables here
+  // define any other members, mutexes, condition variables here
   pthread_mutex_t buffer_mut;
   pthread_mutex_t producer_count_mut;
+  pthread_mutex_t consumer_count_mut;
   pthread_cond_t buffer_full;
   pthread_cond_t buffer_empty;
 
-public:
-  // The following 6 methods should be defined in the implementation file (solution.cpp)
+ public:
+  // The following 6 methods should be defined in the implementation file
+  // (solution.cpp)
   ProducerConsumerProblem(long _n_items, int _n_producers, int _n_consumers,
                           long _queue_size);
   ~ProducerConsumerProblem();
