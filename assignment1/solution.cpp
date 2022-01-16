@@ -79,7 +79,13 @@ void *consumerFunction(void *_arg) {
   // `production_buffer`.
   // Keep track of the number of items consumed and their value and type
   // Once the productions is complete and the queue is also empty, the thread
-Producer::Producer() {
+  // will exit. NOTE: The number of items consumed by each thread need not be
+  // the same Use mutex variables and conditional variables as necessary.
+
+  return nullptr;
+}
+
+Producer::Producer() : num_type(), val_type() {
   id = -1;
   item_start_val = 0;
   increment_val = 0;
