@@ -13,9 +13,10 @@ class Producer {
   int item_start_val;  // starting item value for the producer
   int increment_val;   // increment value for the items
   double time_taken;
-  long np;             // # of items to produce
+  long np;  // # of items to produce
   long num_type[3];
   long val_type[3];
+  int remainder;  // use to determine if producer 0 needs to create extra items
 
   CircularQueue *buffer;
   pthread_mutex_t *buffer_mut;
@@ -45,8 +46,6 @@ class Consumer {
   pthread_cond_t *buffer_empty;
   int *active_producer_count;
   int *active_consumer_count;
-
-
 
   Consumer();
   ~Consumer();

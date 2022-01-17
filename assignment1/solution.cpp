@@ -20,6 +20,7 @@ void *producerFunction(void *_arg) {
   long item_val = producer->item_start_val;
   long items_produced = 0;
   int cur_type = 0;
+  long item_val_before_remainder = producer->np - producer->remainder;
 
   while (items_produced < producer->np) {
     for (int i = 0; i < producer->num_type[cur_type]; i++) {
@@ -47,7 +48,14 @@ void *producerFunction(void *_arg) {
       // update stat variables
       items_produced++;
       producer->val_type[cur_type] += item_val;
-      item_val += producer->increment_val;  // increment next item val
+
+      // Check if producer 0 and if there was a remainder
+      if (producer->id == 0 && producer->remainder && item_val > item_val_before_remainder) {
+        // TODO: Verify this does what I think it does
+        item_val += 1;
+      } else {
+        item_val += producer->increment_val;
+      }
     }
     cur_type++;  // increment to go through next item type
   }
@@ -161,6 +169,7 @@ Producer::Producer() : num_type(), val_type() {
   increment_val = 0;
   time_taken = 0.0;
   np = 0;
+  remainder = 0;
   buffer = nullptr;
   buffer_mut = nullptr;
   active_producer_count_mut = nullptr;
@@ -214,6 +223,8 @@ ProducerConsumerProblem::ProducerConsumerProblem(long _n_items,
 
   // TODO: check if queue size is 0 - do something about it
 
+  // TODO: Check edge cases
+
   // Initialize all mutex and conditional variables here.
   pthread_mutex_init(&buffer_mut, NULL);
   pthread_mutex_init(&producer_count_mut, NULL);
@@ -251,16 +262,24 @@ void ProducerConsumerProblem::startProducers() {
   long num_type_1 = np / 3;
   long num_type_2 = np - num_type_0 - num_type_1;
 
+  // Initialize and set thread detached attribute
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
   // Create producer threads P1, P2, P3,.. using pthread_create.
   for (int i = 0; i < n_producers; i++) {
     // Check if Producer 0 needs to produce 1 extra item
     if (i == 0 && n_items % n_producers) {
-      producers[i].np = np + 1;
-      producers[i].num_type[0] = (np + 1) / 2;
-      producers[i].num_type[1] = (np + 1) / 3;
+      int remainder = n_items % n_producers;
+      producers[i].remainder = remainder;
+      producers[i].np = np + remainder;
+      producers[i].num_type[0] = (np + remainder) / 2;
+      producers[i].num_type[1] = (np + remainder) / 3;
       producers[i].num_type[2] =
-          np + 1 - producers[i].num_type[0] - producers[i].num_type[1];
+          np + remainder - producers[i].num_type[0] - producers[i].num_type[1];
     } else {
+      producers[i].remainder = 0;
       producers[i].np = np;
       producers[i].num_type[0] = num_type_0;
       producers[i].num_type[1] = num_type_1;
@@ -281,17 +300,26 @@ void ProducerConsumerProblem::startProducers() {
 
     // TODO: Check that np == num_type[0] + num_type[1] + num_type[2]
 
-    pthread_create(&producer_threads[i], NULL, producerFunction,
+    pthread_create(&producer_threads[i], &attr, producerFunction,
                    (void *)&producers[i]);
   }
+
+  // Free attribute
+  pthread_attr_destroy(&attr);
 }
 
 void ProducerConsumerProblem::startConsumers() {
   std::cout << "Starting Consumers\n";
   active_consumer_count = n_consumers;
 
+  // Initialize and set thread detached attribute
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
   // Create consumer threads C1, C2, C3,.. using pthread_create.
   for (int i = 0; i < n_consumers; i++) {
+    // TODO: Check that num_type and  val_type values are initialized to 0
     // set Consumer pointers
     consumers[i].buffer = &production_buffer;
     consumers[i].buffer_mut = &buffer_mut;
@@ -305,16 +333,33 @@ void ProducerConsumerProblem::startConsumers() {
     pthread_create(&consumer_threads[i], NULL, consumerFunction,
                    (void *)&consumers[i]);
   }
+
+  // Free attribute
+  pthread_attr_destroy(&attr);
 }
 
 void ProducerConsumerProblem::joinProducers() {
   std::cout << "Joining Producers\n";
-  // Join the producer threads with the main thread using pthread_join
+  // TODO: Join the producer threads with the main thread using pthread_join
+  for (int i = 0; i < n_producers; i++) {
+    int rc = pthread_join(producer_threads[i], NULL);
+    if (rc) {
+      printf("ERROR; return code from pthread_join() is %d\n", rc);
+      exit(-1);
+    }
+  }
 }
 
 void ProducerConsumerProblem::joinConsumers() {
   std::cout << "Joining Consumers\n";
-  // Join the consumer threads with the main thread using pthread_join
+  // TODO: Join the consumer threads with the main thread using pthread_join
+  for (int i = 0; i < n_consumers; i++) {
+    int rc = pthread_join(consumer_threads[i], NULL);
+    if (rc) {
+      printf("ERROR; return code from pthread_join() is %d\n", rc);
+      exit(-1);
+    }
+  }
 }
 
 void ProducerConsumerProblem::printStats() {
