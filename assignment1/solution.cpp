@@ -50,7 +50,8 @@ void *producerFunction(void *_arg) {
       producer->val_type[cur_type] += item_val;
 
       // Check if producer 0 and if there was a remainder
-      if (producer->id == 0 && producer->remainder && item_val > item_val_before_remainder) {
+      if (producer->id == 0 && producer->remainder &&
+          item_val > item_val_before_remainder) {
         // TODO: Verify this does what I think it does
         item_val += 1;
       } else {
@@ -340,7 +341,7 @@ void ProducerConsumerProblem::startConsumers() {
 
 void ProducerConsumerProblem::joinProducers() {
   std::cout << "Joining Producers\n";
-  // TODO: Join the producer threads with the main thread using pthread_join
+  // Join the producer threads with the main thread using pthread_join
   for (int i = 0; i < n_producers; i++) {
     int rc = pthread_join(producer_threads[i], NULL);
     if (rc) {
@@ -352,7 +353,7 @@ void ProducerConsumerProblem::joinProducers() {
 
 void ProducerConsumerProblem::joinConsumers() {
   std::cout << "Joining Consumers\n";
-  // TODO: Join the consumer threads with the main thread using pthread_join
+  // Join the consumer threads with the main thread using pthread_join
   for (int i = 0; i < n_consumers; i++) {
     int rc = pthread_join(consumer_threads[i], NULL);
     if (rc) {
@@ -376,10 +377,28 @@ void ProducerConsumerProblem::printStats() {
   //  41667:38194722222, 125000000000, 1.02925 3, 125000:31250125000,
   //  83333:55555361111, 41667:38194763889, 125000250000, 0.999188
 
-  long total_produced[3];        // total produced per type
-  long total_value_produced[3];  // total value produced per type
+  long total_produced[3] = {0};        // total produced per type
+  long total_value_produced[3] = {0};  // total value produced per type
   for (int i = 0; i < n_producers; i++) {
-    // TODO: Print per producer statistics with above format
+    // Print per producer statistics with above format
+    std::cout << i << ", ";
+    std::cout << producers[i].num_type[0] << ":" << producers[i].val_type[0]
+              << ", ";
+    std::cout << producers[i].num_type[1] << ":" << producers[i].val_type[1]
+              << ", ";
+    std::cout << producers[i].num_type[2] << ":" << producers[i].val_type[2]
+              << ", ";
+    std::cout << producers[i].num_type[0] + producers[i].num_type[1] +
+                     producers[i].num_type[2]
+              << ", ";
+    std::cout << producers[i].time_taken << "\n";
+
+    total_produced[0] += producers[i].num_type[0];
+    total_produced[1] += producers[i].num_type[1];
+    total_produced[2] += producers[i].num_type[2];
+    total_value_produced[0] += producers[i].val_type[0];
+    total_value_produced[1] += producers[i].val_type[1];
+    total_value_produced[2] += producers[i].val_type[2];
   }
 
   std::cout << "Total produced = "
@@ -398,10 +417,28 @@ void ProducerConsumerProblem::printStats() {
   // 0, 256488:63656791749, 163534:109699063438, 87398:79885550318, 1.02899
   // 1, 243512:61342958251, 169798:112521881008, 79270:72893255236, 1.02891
 
-  long total_consumed[3];        // total consumed per type
-  long total_value_consumed[3];  // total value consumed per type = 0;
+  long total_consumed[3] = {0};        // total consumed per type
+  long total_value_consumed[3] = {0};  // total value consumed per type = 0;
   for (int i = 0; i < n_consumers; i++) {
-    // TODO: Print per consumer statistcs with above format
+    // Print per consumer statistcs with above format
+        std::cout << i << ", ";
+    std::cout << consumers[i].num_type[0] << ":" << consumers[i].val_type[0]
+              << ", ";
+    std::cout << consumers[i].num_type[1] << ":" << consumers[i].val_type[1]
+              << ", ";
+    std::cout << consumers[i].num_type[2] << ":" << consumers[i].val_type[2]
+              << ", ";
+    std::cout << consumers[i].num_type[0] + consumers[i].num_type[1] +
+                     consumers[i].num_type[2]
+              << ", ";
+    std::cout << consumers[i].time_taken << "\n";
+
+    total_consumed[0] += consumers[i].num_type[0];
+    total_consumed[1] += consumers[i].num_type[1];
+    total_consumed[2] += consumers[i].num_type[2];
+    total_value_consumed[0] += consumers[i].val_type[0];
+    total_value_consumed[1] += consumers[i].val_type[1];
+    total_value_consumed[2] += consumers[i].val_type[2];
   }
 
   std::cout << "Total consumed = "
