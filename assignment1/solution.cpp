@@ -11,7 +11,6 @@ void *producerFunction(void *_arg) {
   // Use mutex variables and conditional variables as necessary.
   // Each producer enqueues `np` items where np=n/nProducers except for producer
   // 0
-
   timer t;
   t.start();
 
@@ -19,50 +18,57 @@ void *producerFunction(void *_arg) {
 
   long item_val = producer->item_start_val;
   long items_produced = 0;
+  long cur_type_produced = 0;
   int cur_type = 0;
-  long item_val_before_remainder = producer->np - producer->remainder;
+  long item_val_before_remainder =
+      (producer->np - producer->remainder) * producer->increment_val;
 
   while (items_produced < producer->np) {
-    for (int i = 0; i < producer->num_type[cur_type]; i++) {
-      CircularQueueEntry item = {item_val, cur_type, producer->id};
+    // acquire lock on buffer and try to add to buffer
+    CircularQueueEntry item = {item_val, producer->id, cur_type};
+    pthread_mutex_lock(producer->buffer_mut);
+    bool ret = producer->buffer->enqueue(item.value, item.type, item.source);
 
-      // acquire lock on buffer and try to add to buffer
-      pthread_mutex_lock(producer->buffer_mut);
-      bool ret = producer->buffer->enqueue(item.value, item.type, item.source);
-
-      if (ret == false) {
-        // buffer is full, wait until there is room on the buffer
-        // NOTE: pthread_cont_wait() will release the mutex
-        pthread_cond_wait(producer->buffer_full, producer->buffer_mut);
-      }
-
-      if (producer->buffer->itemCount() == 1) {
+    if (ret == true) {
+      if (producer->buffer->itemCount() >= 1) {
         // The queue is no longer empty
         // Signal all consumers indicating queue is not empty
         pthread_cond_signal(producer->buffer_empty);
       }
-
       // unlock the buffer mutex
       pthread_mutex_unlock(producer->buffer_mut);
 
       // update stat variables
       items_produced++;
-      producer->val_type[cur_type] += item_val;
+      cur_type_produced++;
+      producer->val_type[cur_type] += item.value;
 
+      // Increment for next item value
       // Check if producer 0 and if there was a remainder
       if (producer->id == 0 && producer->remainder &&
-          item_val > item_val_before_remainder) {
-        // TODO: Verify this does what I think it does
+          item.value >= item_val_before_remainder) {
         item_val += 1;
       } else {
         item_val += producer->increment_val;
       }
+
+      // update cur_type of item
+      if (cur_type_produced == producer->num_type[cur_type]) {
+        cur_type++;
+        cur_type_produced = 0;
+      }
+    } else {
+      // production_buffer is full, so block on conditional variable waiting for
+      // consumer to signal.
+      // NOTE: pthread_cont_wait() will release the mutex
+      pthread_cond_wait(producer->buffer_full, producer->buffer_mut);
+      // unlock the buffer mutex
+      pthread_mutex_unlock(producer->buffer_mut);
     }
-    cur_type++;  // increment to go through next item type
   }
 
-  // After production is completed:
-  // Update the number of producers that are currently active.
+  // After production is completed: Update the number of producers that are
+  // currently active.
   pthread_mutex_lock(producer->active_producer_count_mut);
   *producer->active_producer_count -= 1;
 
@@ -72,9 +78,7 @@ void *producerFunction(void *_arg) {
     // consumers have finished (can be determined using
     // `active_consumer_count`).
     pthread_mutex_unlock(producer->active_producer_count_mut);
-
     while (true) {
-      // aquire the consumer count mutex
       pthread_mutex_lock(producer->active_consumer_count_mut);
       if (*producer->active_consumer_count > 0) {
         pthread_mutex_unlock(producer->active_consumer_count_mut);
@@ -105,7 +109,6 @@ void *consumerFunction(void *_arg) {
   // will exit. NOTE: The number of items consumed by each thread need not be
   // the same Use mutex variables and conditional variables as necessary.
   // Each consumer dequeues items from the `production_buffer`
-
   timer t;
   t.start();
 
@@ -119,16 +122,14 @@ void *consumerFunction(void *_arg) {
     bool ret = consumer->buffer->dequeue(&item.value, &item.source, &item.type);
 
     if (ret == true) {
-      if (consumer->buffer->itemCount() ==
+      if (consumer->buffer->itemCount() <=
           consumer->buffer->getCapacity() - 1) {
         // The queue is no longer full
         // Signal all producers indicating queue is not full
         pthread_cond_signal(consumer->buffer_full);
       }
-
       // unlock the buffer mutex
       pthread_mutex_unlock(consumer->buffer_mut);
-
       // update stat variables
       consumer->num_type[item.type]++;
       consumer->val_type[item.type] += item.value;
@@ -143,17 +144,22 @@ void *consumerFunction(void *_arg) {
       // consumers, and at this point consumers should decrement
       // `active_consumer_count`
       pthread_mutex_lock(consumer->active_producer_count_mut);
-      if (*consumer->active_producer_count == 0) {
+      if (*consumer->active_producer_count == 0 &&
+          consumer->buffer->isEmpty()) {
+        // unlock the buffer mutex
+        pthread_mutex_unlock(consumer->buffer_mut);
         pthread_mutex_unlock(consumer->active_producer_count_mut);
-
         pthread_mutex_lock(consumer->active_consumer_count_mut);
-        *consumer->active_producer_count -= 1;
+        *consumer->active_consumer_count -= 1;
         pthread_mutex_unlock(consumer->active_consumer_count_mut);
+        break;  // exit condition
       }
       // Scenario 2 : The queue is not empty and / or the producers are active.
       // Continue consuming.
       else {
         pthread_mutex_unlock(consumer->active_producer_count_mut);
+        // unlock the buffer mutex
+        pthread_mutex_unlock(consumer->buffer_mut);
       }
     }
   }
@@ -270,7 +276,9 @@ void ProducerConsumerProblem::startProducers() {
 
   // Create producer threads P1, P2, P3,.. using pthread_create.
   for (int i = 0; i < n_producers; i++) {
-    // Check if Producer 0 needs to produce 1 extra item
+    // FIXME: CALCULATION IS WRONG try:
+    // ./producer_consumer --nItems 10000 --nProducers 3 --nConsumers 2
+    // --bufferSize 50000 Check if Producer 0 needs to produce 1 extra item
     if (i == 0 && n_items % n_producers) {
       int remainder = n_items % n_producers;
       producers[i].remainder = remainder;
@@ -388,8 +396,8 @@ void ProducerConsumerProblem::printStats() {
               << ", ";
     std::cout << producers[i].num_type[2] << ":" << producers[i].val_type[2]
               << ", ";
-    std::cout << producers[i].num_type[0] + producers[i].num_type[1] +
-                     producers[i].num_type[2]
+    std::cout << producers[i].val_type[0] + producers[i].val_type[1] +
+                     producers[i].val_type[2]
               << ", ";
     std::cout << producers[i].time_taken << "\n";
 
@@ -411,7 +419,7 @@ void ProducerConsumerProblem::printStats() {
   std::cout << "Consumer stats\n";
   std::cout << "consumer_id, items_consumed_type0:value_type0, "
                "items_consumed_type1:value_type1, "
-               "items_consumed_type2:value_type2, time_taken";
+               "items_consumed_type2:value_type2, time_taken\n";
 
   // Make sure you print the consumer stats in the following manner
   // 0, 256488:63656791749, 163534:109699063438, 87398:79885550318, 1.02899
@@ -421,15 +429,12 @@ void ProducerConsumerProblem::printStats() {
   long total_value_consumed[3] = {0};  // total value consumed per type = 0;
   for (int i = 0; i < n_consumers; i++) {
     // Print per consumer statistcs with above format
-        std::cout << i << ", ";
+    std::cout << i << ", ";
     std::cout << consumers[i].num_type[0] << ":" << consumers[i].val_type[0]
               << ", ";
     std::cout << consumers[i].num_type[1] << ":" << consumers[i].val_type[1]
               << ", ";
     std::cout << consumers[i].num_type[2] << ":" << consumers[i].val_type[2]
-              << ", ";
-    std::cout << consumers[i].num_type[0] + consumers[i].num_type[1] +
-                     consumers[i].num_type[2]
               << ", ";
     std::cout << consumers[i].time_taken << "\n";
 
