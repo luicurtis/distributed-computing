@@ -230,7 +230,11 @@ ProducerConsumerProblem::ProducerConsumerProblem(long _n_items,
 
   // TODO: check if queue size is 0 - do something about it
 
-  // TODO: Check edge cases
+  // Initalize active producer/consumer counts
+  // This is to prevent the case where the producers finish producing before
+  // consumers start.
+  active_producer_count = n_producers;
+  active_consumer_count = n_consumers;
 
   // Initialize all mutex and conditional variables here.
   pthread_mutex_init(&buffer_mut, NULL);
@@ -261,7 +265,7 @@ ProducerConsumerProblem::~ProducerConsumerProblem() {
 
 void ProducerConsumerProblem::startProducers() {
   std::cout << "Starting Producers\n";
-  active_producer_count = n_producers;
+  // active_producer_count = n_producers;
   // Compute number of items for each thread, and number of items per type
   // per thread
   long np = n_items / n_producers;
@@ -319,7 +323,7 @@ void ProducerConsumerProblem::startProducers() {
 
 void ProducerConsumerProblem::startConsumers() {
   std::cout << "Starting Consumers\n";
-  active_consumer_count = n_consumers;
+  // active_consumer_count = n_consumers;
 
   // Initialize and set thread detached attribute
   pthread_attr_t attr;
