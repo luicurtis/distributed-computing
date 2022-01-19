@@ -187,9 +187,7 @@ Producer::Producer() : num_type(), val_type() {
   active_consumer_count = nullptr;
 }
 
-Producer::~Producer() {
-  // TODO: Free data if it has (it shouldnt have anything)
-}
+Producer::~Producer() {}
 
 Consumer::Consumer() : num_type(), val_type() {
   time_taken = 0.0;
@@ -203,9 +201,7 @@ Consumer::Consumer() : num_type(), val_type() {
   active_consumer_count = nullptr;
 }
 
-Consumer::~Consumer() {
-  // TODO: Free data if it has (it shouldnt have anything)
-}
+Consumer::~Consumer() {}
 
 ProducerConsumerProblem::ProducerConsumerProblem(long _n_items,
                                                  int _n_producers,
