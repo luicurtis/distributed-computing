@@ -33,7 +33,7 @@ void *producerFunction(void *_arg) {
       if (producer->buffer->itemCount() >= 1) {
         // The queue is no longer empty
         // Signal all consumers indicating queue is not empty
-        pthread_cond_signal(producer->buffer_empty);
+        pthread_cond_broadcast(producer->buffer_empty);
       }
       // unlock the buffer mutex
       pthread_mutex_unlock(producer->buffer_mut);
@@ -82,7 +82,7 @@ void *producerFunction(void *_arg) {
       pthread_mutex_lock(producer->active_consumer_count_mut);
       if (*producer->active_consumer_count > 0) {
         pthread_mutex_unlock(producer->active_consumer_count_mut);
-        pthread_cond_signal(producer->buffer_empty);
+        pthread_cond_broadcast(producer->buffer_empty);
       } else {
         pthread_mutex_unlock(producer->active_consumer_count_mut);
         break;
@@ -126,7 +126,7 @@ void *consumerFunction(void *_arg) {
           consumer->buffer->getCapacity() - 1) {
         // The queue is no longer full
         // Signal all producers indicating queue is not full
-        pthread_cond_signal(consumer->buffer_full);
+        pthread_cond_broadcast(consumer->buffer_full);
       }
       // unlock the buffer mutex
       pthread_mutex_unlock(consumer->buffer_mut);
