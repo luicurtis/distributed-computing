@@ -228,7 +228,14 @@ ProducerConsumerProblem::ProducerConsumerProblem(long _n_items,
     producer_threads = new pthread_t[n_producers];
   }
 
-  // TODO: check if queue size is 0 - do something about it
+  // Check edge cases on inputs
+  if (_n_items <= 0 || n_consumers <= 0 || n_producers <= 0 ||
+      _queue_size <= 0) {
+    throw std::invalid_argument(
+        "The commandline arguments: nItems, nProducers, nConsumers, and "
+        "bufferSize cannot be less than or "
+        "equal to 0.");
+  }
 
   // Initalize active producer/consumer counts
   // This is to prevent the case where the producers finish producing before

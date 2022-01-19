@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include <iomanip>
+#include <stdexcept>
 
 #include "core/circular_queue.h"
 #include "core/utils.h"
