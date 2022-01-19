@@ -283,9 +283,6 @@ void ProducerConsumerProblem::startProducers() {
 
   // Create producer threads P1, P2, P3,.. using pthread_create.
   for (int i = 0; i < n_producers; i++) {
-    // FIXME: CALCULATION IS WRONG try:
-    // ./producer_consumer --nItems 10000 --nProducers 3 --nConsumers 2
-    // --bufferSize 50000 Check if Producer 0 needs to produce 1 extra item
     if (i == 0 && n_items % n_producers) {
       int remainder = n_items % n_producers;
       producers[i].remainder = remainder;
@@ -314,8 +311,6 @@ void ProducerConsumerProblem::startProducers() {
     producers[i].active_producer_count = &active_producer_count;
     producers[i].active_consumer_count = &active_consumer_count;
 
-    // TODO: Check that np == num_type[0] + num_type[1] + num_type[2]
-
     pthread_create(&producer_threads[i], &attr, producerFunction,
                    (void *)&producers[i]);
   }
@@ -335,7 +330,6 @@ void ProducerConsumerProblem::startConsumers() {
 
   // Create consumer threads C1, C2, C3,.. using pthread_create.
   for (int i = 0; i < n_consumers; i++) {
-    // TODO: Check that num_type and  val_type values are initialized to 0
     // set Consumer pointers
     consumers[i].buffer = &production_buffer;
     consumers[i].buffer_mut = &buffer_mut;
