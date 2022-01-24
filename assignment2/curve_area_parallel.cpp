@@ -128,11 +128,11 @@ int main(int argc, char *argv[]) {
   if (n_points <= 0 || n_threads <= 0) {
     throw std::invalid_argument(
         "The commandline arguments: --nPoints and --nThreads "
-        "cannot be less than or equal to 0.\n");
+        "must be at least 1\n");
   }
   if (a < 1 || b < 1) {
     throw std::invalid_argument(
-        "The commandline arguments: --coeffA and --coeffB must be greater than 1.\n");
+        "The commandline arguments: --coeffA and --coeffB must be at least 1.\n");
   }
 
   std::cout << "Number of points : " << n_points << "\n";
