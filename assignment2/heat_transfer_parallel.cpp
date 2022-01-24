@@ -3,6 +3,8 @@
 #include <iostream>
 #include <stdlib.h>
 #include <thread>
+#include <stdexcept>
+
 
 #define DEFAULT_GRID_SIZE "1000"
 #define DEFAULT_NUMBER_OF_THREADS "1"
@@ -170,15 +172,17 @@ int main(int argc, char *argv[]) {
       });
   auto cl_options = options.parse(argc, argv);
   uint n_threads = cl_options["nThreads"].as<uint>();
-  if (n_threads != 1) {
-	std::cout << "Serial version. Number of threads should be equal to 1. Terminating..." << std::endl;
-	return 1;
-  }
   uint grid_size = cl_options["gSize"].as<uint>();
   double init_temp = cl_options["mTemp"].as<double>();
   double Cx = cl_options["iCX"].as<double>();
   double Cy = cl_options["iCY"].as<double>();
   uint steps = cl_options["tSteps"].as<uint>();
+
+  // check for valid input
+  if (grid_size <= 0 || n_threads <= 0 || tSteps <= 0) {
+        throw std::invalid_argument(
+        "The commandline arguments: --gSize, --nThreads and --tSteps must be at least 1.\n");
+  }
   std::cout << "Grid Size : " << grid_size << "x" << grid_size << std::endl;
   std::cout << "Number of threads : " << n_threads << std::endl;
   std::cout << "Cx : " << Cx << std::endl << "Cy : " << Cy << std::endl;
