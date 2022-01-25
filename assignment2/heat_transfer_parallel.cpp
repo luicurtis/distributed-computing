@@ -79,7 +79,7 @@ class TemperatureArray {
 
 inline void heat_transfer_calculation(uint tid, uint size, uint start, uint end,
                                       double *time_taken, TemperatureArray *T,
-                                      uint steps) {
+                                      uint steps, CustomBarrier *barrier) {
   timer t1;
   t1.start();
   uint stepcount;
@@ -92,23 +92,36 @@ inline void heat_transfer_calculation(uint tid, uint size, uint start, uint end,
     if (tid == 0) {
       // thread 0 should swap arrays. This is the only thread in the serial
       // version
+      // wait for all threads to finish with cur and prev array before swapping
+      barrier->wait();
       T->SwapArrays();
       T->IncrementStepCount();
+      // this wait will signal the cv that the arrays have been swapped
+      barrier->wait();
+    } else {
+      // other threads should wait until swap is complete
+      // first wait is to make sure all threads are done using the prev array
+      barrier->wait();
+      // second wait is to allow thread 0 swap and all other arrays will wait
+      // again until the swap is done
+      barrier->wait();
     }
-    // else {
-    // // other threads should wait until swap is complete
-    //
-    //  }
   }  // end of current step
   *time_taken = t1.stop();
 }
 
-void heat_transfer_calculation_serial(uint size, uint number_of_threads,
-                                      TemperatureArray *T, uint steps) {
-  timer serial_timer;
-  double time_taken = 0.0;
+void heat_transfer_calculation_parallel(uint size, uint number_of_threads,
+                                        TemperatureArray *T, uint steps) {
+  timer main_timer;
+  double main_time_taken = 0.0;
+  std::vector<double> time_taken(number_of_threads, 0.0);
   std::vector<uint> startx(number_of_threads);
   std::vector<uint> endx(number_of_threads);
+  std::vector<std::thread> threads;
+  threads.reserve(number_of_threads);
+  CustomBarrier barrier((int)number_of_threads);
+  uint step = size / 6;
+  uint position = 0;
 
   // The following code is used to determine start and end of each thread's
   // share of the grid Also used to determine which points to print out at the
@@ -129,18 +142,27 @@ void heat_transfer_calculation_serial(uint size, uint number_of_threads,
   }
   // end of code to determine start and end of each thread's share of the grid
 
-  serial_timer.start();
+  main_timer.start();
   //*------------------------------------------------------------------------
 
-  heat_transfer_calculation(0, size, startx[0], endx[0], &time_taken, T, steps);
+  // TODO: create loop to create threads to run heat_transfer_calculation
+  for (uint i = 0; i < number_of_threads; i++) {
+    threads.emplace_back(heat_transfer_calculation, i, size, startx[i], endx[i],
+                         &time_taken[i], T, steps, &barrier);
+  }
+
+  // Join threads
+  for (std::thread &t : threads) {
+    t.join();
+  }
 
   // Print these statistics for each thread
   std::cout << "thread_id, start_column, end_column, time_taken\n";
-  std::cout << "0, 0, " << size - 1 << ", " << std::setprecision(TIME_PRECISION)
-            << time_taken << "\n";
+  for (uint i = 0; i < number_of_threads; i++) {
+    std::cout << i << ", " << startx[i] << ", " << endx[i] << ", "
+              << std::setprecision(TIME_PRECISION) << time_taken[i] << "\n";
+  }
 
-  uint step = size / 6;
-  uint position = 0;
   for (uint x = 0; x < 6; x++) {
     std::cout << "Temp[" << position << "," << position
               << "]=" << T->temp(position, position) << std::endl;
@@ -154,10 +176,10 @@ void heat_transfer_calculation_serial(uint size, uint number_of_threads,
   }
 
   //*------------------------------------------------------------------------
-  time_taken = serial_timer.stop();
+  main_time_taken = main_timer.stop();
 
   std::cout << "Time taken (in seconds) : " << std::setprecision(TIME_PRECISION)
-            << time_taken << "\n";
+            << main_time_taken << "\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -206,7 +228,7 @@ int main(int argc, char *argv[]) {
               << std::endl;
     return 2;
   }
-  heat_transfer_calculation_serial(grid_size, n_threads, T, steps);
+  heat_transfer_calculation_parallel(grid_size, n_threads, T, steps);
 
   delete T;
   return 0;
