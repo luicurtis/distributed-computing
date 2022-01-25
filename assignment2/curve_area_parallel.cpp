@@ -40,37 +40,38 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
                                      uint r_seed, uint T) {
   std::vector<std::thread> threads;
   threads.reserve(T);
-  unsigned long local_curve_points[T] = {};
+  unsigned long local_curve_points[T] = {}; // FIXME: turn this to vector
   unsigned long total_curve_points = 0;
   unsigned long n_points = n / T;
   unsigned long remainder = n % T;
-  unsigned long points_generated[T] = {};
+  unsigned long points_generated[T] = {}; // FIXME: turn this to vector
   uint random_seed = r_seed;
   timer parallel_timer;
   double time_taken = 0.0;
-  double local_time_taken[T] = {};
+  double local_time_taken[T] = {}; // FIXME: turn this to vector
 
   parallel_timer.start();
 
+  // FIXME: able to optimize this - look at how heat_transfer_problem distributes the excess columns
   // Create T threads
   for (uint i = 0; i < T; i++) {
     // check if there is remainder to distribute
     if (remainder > 0) {
       threads.emplace_back(get_points_in_curve_parallel, n_points + 1,
                            random_seed+i, a, b, std::ref(local_curve_points[i]),
-                           std::ref(local_time_taken[i]));
+                           std::ref(local_time_taken[i])); // FIXME: Dont use std::ref
       points_generated[i] = n_points + 1;
       remainder--;
     } else {
       threads.emplace_back(get_points_in_curve_parallel, n_points, random_seed+i,
                            a, b, std::ref(local_curve_points[i]),
-                           std::ref(local_time_taken[i]));
+                           std::ref(local_time_taken[i])); // FIXME: Dont use std::ref
       points_generated[i] = n_points;
     }
   }
 
   // Join threads
-  for (auto &t : threads) {
+  for (std::thread &t : threads) {
     t.join();
   }
 
