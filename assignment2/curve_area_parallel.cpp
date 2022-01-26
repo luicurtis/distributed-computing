@@ -46,7 +46,7 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
   unsigned long remainder = n % T;
   std::vector<unsigned long> n_points_threads(T, 0);
   uint random_seed = r_seed;
-  timer parallel_timer;
+  timer main_timer;
   double time_taken = 0.0;
   std::vector<double> local_time_taken(T, 0);
 
@@ -60,7 +60,7 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
     }
   }
 
-  parallel_timer.start();
+  main_timer.start();
 
   // Create T threads
   for (uint i = 0; i < T; i++) {
@@ -82,7 +82,7 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
   double area_value = 4.0 * (double)total_curve_points / (double)n;
 
   //*------------------------------------------------------------------------
-  time_taken = parallel_timer.stop();
+  time_taken = main_timer.stop();
 
   std::cout << "thread_id, points_generated, curve_points, time_taken\n";
   for (uint i = 0; i < T; i++) {
