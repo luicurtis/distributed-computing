@@ -39,15 +39,15 @@ void get_points_in_curve(unsigned long n, uint random_seed, float a, float b,
 void curve_area_calculation_parallel(unsigned long n, float a, float b,
                                      uint r_seed, uint T) {
   std::vector<std::thread> threads(T);
-  std::vector<unsigned long> local_curve_points(T, 0);
+  unsigned long local_curve_points[T] = {};
   unsigned long total_curve_points = 0;
   unsigned long n_points = n / T;
   unsigned long remainder = n % T;
-  std::vector<unsigned long> n_points_threads(T, 0);
+  unsigned long n_points_threads[T] = {};
   uint random_seed = r_seed;
   timer main_timer;
   double time_taken = 0.0;
-  std::vector<double> local_time_taken(T, 0);
+  double local_time_taken[T] = {};
 
   // determine how many points each thread will use
   for (uint i = 0; i < T; i++) {
