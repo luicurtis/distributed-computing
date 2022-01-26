@@ -20,8 +20,8 @@ inline double get_random_coordinate(uint *random_seed) {
 }
 
 void get_points_in_curve_parallel(unsigned long n, uint random_seed, float a,
-                                  float b, unsigned long &curve_count,
-                                  double &time_taken) {
+                                  float b, unsigned long *curve_count,
+                                  double *time_taken) {
   timer t;
   double x_coord, y_coord;
 
@@ -30,44 +30,43 @@ void get_points_in_curve_parallel(unsigned long n, uint random_seed, float a,
   for (unsigned long i = 0; i < n; i++) {
     x_coord = ((2.0 * get_random_coordinate(&random_seed)) - 1.0);
     y_coord = ((2.0 * get_random_coordinate(&random_seed)) - 1.0);
-    if ((a * sqr(x_coord) + b * sqr(sqr(y_coord))) <= 1.0) curve_count++;
+    if ((a * sqr(x_coord) + b * sqr(sqr(y_coord))) <= 1.0) *curve_count++;
   }
 
-  time_taken = t.stop();
+  *time_taken = t.stop();
 }
 
 void curve_area_calculation_parallel(unsigned long n, float a, float b,
                                      uint r_seed, uint T) {
   std::vector<std::thread> threads;
   threads.reserve(T);
-  unsigned long local_curve_points[T] = {}; // FIXME: turn this to vector
+  std::vector<unsigned long> local_curve_points(T, 0);
   unsigned long total_curve_points = 0;
   unsigned long n_points = n / T;
   unsigned long remainder = n % T;
-  unsigned long points_generated[T] = {}; // FIXME: turn this to vector
+  std::vector<unsigned long> n_points_threads(T, 0);
   uint random_seed = r_seed;
   timer parallel_timer;
   double time_taken = 0.0;
-  double local_time_taken[T] = {}; // FIXME: turn this to vector
+  std::vector<double> local_time_taken(T, 0);
+
+  // determine how many points each thread will use
+  for (uint i = 0; i < T; i++) {
+    if (remainder > 0) {
+      n_points_threads[i] = n_points + 1;
+      remainder--;
+    } else {
+      n_points_threads[i] = n_points;
+    }
+  }
 
   parallel_timer.start();
 
-  // FIXME: able to optimize this - look at how heat_transfer_problem distributes the excess columns
   // Create T threads
   for (uint i = 0; i < T; i++) {
-    // check if there is remainder to distribute
-    if (remainder > 0) {
-      threads.emplace_back(get_points_in_curve_parallel, n_points + 1,
-                           random_seed+i, a, b, std::ref(local_curve_points[i]),
-                           std::ref(local_time_taken[i])); // FIXME: Dont use std::ref
-      points_generated[i] = n_points + 1;
-      remainder--;
-    } else {
-      threads.emplace_back(get_points_in_curve_parallel, n_points, random_seed+i,
-                           a, b, std::ref(local_curve_points[i]),
-                           std::ref(local_time_taken[i])); // FIXME: Dont use std::ref
-      points_generated[i] = n_points;
-    }
+    threads.emplace_back(get_points_in_curve_parallel, n_points,
+                         random_seed + i, a, b, &local_curve_points[i],
+                         &local_time_taken[i]);
   }
 
   // Join threads
@@ -87,7 +86,7 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
 
   std::cout << "thread_id, points_generated, curve_points, time_taken\n";
   for (uint i = 0; i < T; i++) {
-    std::cout << i << ", " << points_generated[i] << ", "
+    std::cout << i << ", " << n_points_threads[i] << ", "
               << local_curve_points[i] << ", "
               << std::setprecision(TIME_PRECISION) << local_time_taken[i]
               << "\n";
@@ -133,7 +132,8 @@ int main(int argc, char *argv[]) {
   }
   if (a < 1 || b < 1) {
     throw std::invalid_argument(
-        "The commandline arguments: --coeffA and --coeffB must be at least 1.\n");
+        "The commandline arguments: --coeffA and --coeffB must be at least "
+        "1.\n");
   }
 
   std::cout << "Number of points : " << n_points << "\n";
