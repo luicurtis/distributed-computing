@@ -30,7 +30,9 @@ void get_points_in_curve_parallel(unsigned long n, uint random_seed, float a,
   for (unsigned long i = 0; i < n; i++) {
     x_coord = ((2.0 * get_random_coordinate(&random_seed)) - 1.0);
     y_coord = ((2.0 * get_random_coordinate(&random_seed)) - 1.0);
-    if ((a * sqr(x_coord) + b * sqr(sqr(y_coord))) <= 1.0) *curve_count++;
+    if ((a * sqr(x_coord) + b * sqr(sqr(y_coord))) <= 1.0) {
+      *curve_count += 1;
+    }
   }
 
   *time_taken = t.stop();
@@ -64,7 +66,7 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
 
   // Create T threads
   for (uint i = 0; i < T; i++) {
-    threads.emplace_back(get_points_in_curve_parallel, n_points,
+    threads.emplace_back(get_points_in_curve_parallel, n_points_threads[i],
                          random_seed + i, a, b, &local_curve_points[i],
                          &local_time_taken[i]);
   }
