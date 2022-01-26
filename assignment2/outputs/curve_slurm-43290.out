@@ -1,0 +1,70 @@
+Evaluating /home/cwlui/cmpt431/assignment2/curve_area_parallel
+Executing Testcase 1
+Using 1 threads
+/home/cwlui/cmpt431/assignment2/curve_area_parallel --nThreads 1 --nPoints 100000000 --coeffA 1.0 --coeffB 1.0 --rSeed 37
+Test case 1 exited with exit code : 0
+Evaluating Test case 1...
+0, 100000000, 87401433, 4.2501
+Total points generated : 100000000
+Validation successful
+Your parallel execution time, T : 4.2503 seconds
+Expected parallel execution time, T_expected : 5.0 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
+
+Executing Testcase 2
+Using 4 threads
+/home/cwlui/cmpt431/assignment2/curve_area_parallel --nThreads 4 --nPoints 100000000 --coeffA 1.0 --coeffB 1.0 --rSeed 37
+Test case 3 exited with exit code : 0
+Evaluating Test case 2...
+0, 25000000, 21851735, 5.1652
+1, 25000000, 21850175, 5.4781
+2, 25000000, 21848561, 4.2989
+3, 25000000, 21850086, 5.1881
+Total points generated : 100000000
+Validation successful
+WARNING : Your parallel execution time (5.4783) is more than the serial execution time (5.0).
+Ideally, your execution time should less than  5.0
+Your parallel execution time, T : 5.4783 seconds
+Expected parallel execution time, T_expected : 1.2 seconds
+Ideally, T should be equal to (or less than) T_expected
+WARNING : Your parallel execution time (5.4783 seconds) is more than 1.5 times higher than the expected parallel execution time (1.2 seconds).
+Ideally, your execution time should be around 1.2 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
+
+Executing Testcase 3
+Using 6 threads
+/home/cwlui/cmpt431/assignment2/curve_area_parallel --nThreads 6 --nPoints 1000000005 --coeffA 3.7 --coeffB 2.5 --rSeed 127
+Test case 3 exited with exit code : 0
+Evaluating Test case 3...
+0, 166666668, 60228691, 28.542
+1, 166666668, 60227458, 28.744
+2, 166666668, 60225801, 29
+3, 166666667, 60221784, 24.405
+4, 166666667, 60226819, 28.119
+5, 166666667, 60227208, 25.878
+Total points generated : 1000000005
+VALIDATION FAILED: Time taken = 0.0
+Validation failed
+Evaluation script exited with exit code : 1
+
+Executing Testcase 4
+Using 5 threads
+/home/cwlui/cmpt431/assignment2/curve_area_parallel --nThreads 5 --nPoints 700000002 --coeffA 10.2 --coeffB 1.1 --rSeed 11927
+Test case 4 exited with exit code : 0
+Evaluating Test case 4...
+0, 140000001, 37409584, 15.981
+1, 140000001, 37410972, 17.183
+2, 140000000, 37411424, 15.915
+3, 140000000, 37410604, 15.916
+4, 140000000, 37411858, 17.173
+Total points generated : 700000002
+Validation successful
+Your parallel execution time, T : 17.188 seconds
+Expected parallel execution time, T_expected : 6.2 seconds
+Ideally, T should be equal to (or less than) T_expected
+WARNING : Your parallel execution time (17.188 seconds) is more than 1.5 times higher than the expected parallel execution time (6.2 seconds).
+Ideally, your execution time should be around 6.2 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0

@@ -19,12 +19,11 @@ inline double get_random_coordinate(uint *random_seed) {
   return ((double)rand_r(random_seed)) / c_const;
 }
 
-void get_points_in_curve_parallel(unsigned long n, uint random_seed, float a,
+void get_points_in_curve(unsigned long n, uint random_seed, float a,
                                   float b, unsigned long *curve_count,
                                   double *time_taken) {
   timer t;
   double x_coord, y_coord;
-
   t.start();
 
   for (unsigned long i = 0; i < n; i++) {
@@ -40,8 +39,7 @@ void get_points_in_curve_parallel(unsigned long n, uint random_seed, float a,
 
 void curve_area_calculation_parallel(unsigned long n, float a, float b,
                                      uint r_seed, uint T) {
-  std::vector<std::thread> threads;
-  threads.reserve(T);
+  std::vector<std::thread> threads(T); 
   std::vector<unsigned long> local_curve_points(T, 0);
   unsigned long total_curve_points = 0;
   unsigned long n_points = n / T;
@@ -66,14 +64,16 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
 
   // Create T threads
   for (uint i = 0; i < T; i++) {
-    threads.emplace_back(get_points_in_curve_parallel, n_points_threads[i],
+    threads.push_back(std::thread(get_points_in_curve, n_points_threads[i],
                          random_seed + i, a, b, &local_curve_points[i],
-                         &local_time_taken[i]);
+                         &local_time_taken[i]));
   }
 
   // Join threads
   for (std::thread &t : threads) {
-    t.join();
+    if (t.joinable()){
+      t.join();
+    }
   }
 
   // add up the total points
