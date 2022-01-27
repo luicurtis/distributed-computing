@@ -81,11 +81,14 @@ inline void heat_transfer_calculation(uint tid, uint size, uint start, uint end,
                                       double *time_taken, TemperatureArray *T,
                                       uint steps, CustomBarrier *barrier) {
   timer t1;
-  uint stepcount;
+  uint stepcount = 1;
+  uint x = start;
+  uint y = 0;
+
   t1.start();
   for (stepcount = 1; stepcount <= steps; stepcount++) {
-    for (uint x = start; x <= end; x++) {
-      for (uint y = 0; y < size; y++) {
+    for (x = start; x <= end; x++) {
+      for (y = 0; y < size; y++) {
         T->ComputeNewTemp(x, y);
       }
     }

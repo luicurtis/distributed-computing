@@ -1,0 +1,31 @@
+Grid Size : 1000x1000
+Number of threads : 8
+Cx : 0.05
+Cy : 0.1
+Temperature in the middle of grid : 1000
+Time Steps : 5000
+Initializing Temperature Array...
+thread_id, start_column, end_column, time_taken
+0, 0, 124, 14.766
+1, 125, 249, 14.766
+2, 250, 374, 14.762
+3, 375, 499, 14.764
+4, 500, 624, 14.762
+5, 625, 749, 14.765
+6, 750, 874, 14.764
+7, 875, 999, 14.765
+Temp[0,0]=0
+Temp[166,166]=2.2034e-18
+Temp[332,332]=227.67
+Temp[498,498]=1000
+Temp[664,664]=273.34
+Temp[830,830]=1.0089e-17
+Temp[124,124]=8.0422e-29
+Temp[249,249]=0.00029692
+Temp[374,374]=868.37
+Temp[499,499]=1000
+Temp[624,624]=876.62
+Temp[749,749]=0.00038982
+Temp[874,874]=1.5123e-28
+Temp[999,999]=0
+Time taken (in seconds) : 14.767
