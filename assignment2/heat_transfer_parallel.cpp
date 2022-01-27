@@ -81,29 +81,26 @@ inline void heat_transfer_calculation(uint tid, uint size, uint start, uint end,
                                       double *time_taken, TemperatureArray *T,
                                       uint steps, CustomBarrier *barrier) {
   timer t1;
-  t1.start();
   uint stepcount;
+  t1.start();
   for (stepcount = 1; stepcount <= steps; stepcount++) {
     for (uint x = start; x <= end; x++) {
       for (uint y = 0; y < size; y++) {
         T->ComputeNewTemp(x, y);
       }
     }
+    // wait for all threads to finish current step
+    barrier->wait();
     if (tid == 0) {
       // thread 0 should swap arrays. This is the only thread in the serial
       // version
-      // wait for all threads to finish with cur and prev array before swapping
-      barrier->wait();
       T->SwapArrays();
       T->IncrementStepCount();
       // this wait will signal the cv that the arrays have been swapped
       barrier->wait();
     } else {
       // other threads should wait until swap is complete
-      // first wait is to make sure all threads are done using the prev array
-      barrier->wait();
-      // second wait is to allow thread 0 swap and all other arrays will wait
-      // again until the swap is done
+      // wait for thread 0 swap
       barrier->wait();
     }
   }  // end of current step
@@ -152,7 +149,7 @@ void heat_transfer_calculation_parallel(uint size, uint number_of_threads,
   // Join threads
   for (std::thread &t : threads) {
     if (t.joinable()) {
-    t.join();
+      t.join();
     }
   }
 
