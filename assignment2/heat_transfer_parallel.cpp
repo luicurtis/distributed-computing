@@ -117,8 +117,7 @@ void heat_transfer_calculation_parallel(uint size, uint number_of_threads,
   std::vector<double> time_taken(number_of_threads, 0.0);
   std::vector<uint> startx(number_of_threads);
   std::vector<uint> endx(number_of_threads);
-  std::vector<std::thread> threads;
-  threads.reserve(number_of_threads);
+  std::vector<std::thread> threads(number_of_threads);
   CustomBarrier barrier((int)number_of_threads);
   uint step = size / 6;
   uint position = 0;
@@ -145,15 +144,16 @@ void heat_transfer_calculation_parallel(uint size, uint number_of_threads,
   main_timer.start();
   //*------------------------------------------------------------------------
 
-  // TODO: create loop to create threads to run heat_transfer_calculation
   for (uint i = 0; i < number_of_threads; i++) {
-    threads.emplace_back(heat_transfer_calculation, i, size, startx[i], endx[i],
-                         &time_taken[i], T, steps, &barrier);
+    threads.push_back(std::thread(heat_transfer_calculation, i, size, startx[i],
+                                  endx[i], &time_taken[i], T, steps, &barrier));
   }
 
   // Join threads
   for (std::thread &t : threads) {
+    if (t.joinable()) {
     t.join();
+    }
   }
 
   // Print these statistics for each thread
