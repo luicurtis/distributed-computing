@@ -1,0 +1,64 @@
+Evaluating /home/cwlui/cmpt431/assignment2/curve_area_parallel
+Executing Testcase 1
+Using 1 threads
+/home/cwlui/cmpt431/assignment2/curve_area_parallel --nThreads 1 --nPoints 100000000 --coeffA 1.0 --coeffB 1.0 --rSeed 37
+Test case 1 exited with exit code : 0
+Evaluating Test case 1...
+0, 100000000, 87401433, 3.8616
+Total points generated : 100000000
+Validation successful
+Your parallel execution time, T : 3.8618 seconds
+Expected parallel execution time, T_expected : 5.0 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
+
+Executing Testcase 2
+Using 4 threads
+/home/cwlui/cmpt431/assignment2/curve_area_parallel --nThreads 4 --nPoints 100000000 --coeffA 1.0 --coeffB 1.0 --rSeed 37
+Test case 3 exited with exit code : 0
+Evaluating Test case 2...
+0, 25000000, 21851735, 0.96636
+1, 25000000, 21850175, 0.96642
+2, 25000000, 21848561, 0.96624
+3, 25000000, 21850086, 0.96643
+Total points generated : 100000000
+Validation successful
+Your parallel execution time, T : 0.96665 seconds
+Expected parallel execution time, T_expected : 1.2 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
+
+Executing Testcase 3
+Using 6 threads
+/home/cwlui/cmpt431/assignment2/curve_area_parallel --nThreads 6 --nPoints 1000000005 --coeffA 3.7 --coeffB 2.5 --rSeed 127
+Test case 3 exited with exit code : 0
+Evaluating Test case 3...
+0, 166666668, 60228691, 6.4383
+1, 166666668, 60227458, 6.5193
+2, 166666668, 60225801, 6.4391
+3, 166666667, 60221784, 6.4394
+4, 166666667, 60226819, 6.502
+5, 166666667, 60227208, 6.4401
+Total points generated : 1000000005
+Validation successful
+Your parallel execution time, T : 6.5196 seconds
+Expected parallel execution time, T_expected : 7.4 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
+
+Executing Testcase 4
+Using 5 threads
+/home/cwlui/cmpt431/assignment2/curve_area_parallel --nThreads 5 --nPoints 700000002 --coeffA 10.2 --coeffB 1.1 --rSeed 11927
+Test case 4 exited with exit code : 0
+Evaluating Test case 4...
+0, 140000001, 37409584, 5.4092
+1, 140000001, 37410972, 5.4101
+2, 140000000, 37411424, 5.4075
+3, 140000000, 37410604, 5.4074
+4, 140000000, 37411858, 5.4081
+Total points generated : 700000002
+Validation successful
+Your parallel execution time, T : 5.4215 seconds
+Expected parallel execution time, T_expected : 6.2 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
