@@ -1,0 +1,73 @@
+Evaluating /home/cwlui/cmpt431/assignment2/heat_transfer_parallel
+
+Executing Testcase 1
+Using 1 threads
+Test case 1 exited with exit code : 0
+Evaluating Test case 1...
+Validation successful
+Your parallel execution time, T : 2.5556 seconds
+Expected parallel execution time, T_expected : 2.7 seconds
+Evaluation successful
+python /home/cwlui/cmpt431/assignment2/test_scripts/heat_transfer_evaluator.pyc --file /tmp/scratch_1643308533273101 --nThreads 1 --pointToCheck 166 --expectedResult 119.68 --serialTime 2.7 --parallelTime 2.7
+Evaluation script exited with exit code : 0
+
+Executing Testcase 2
+Using 8 threads
+/home/cwlui/cmpt431/assignment2/heat_transfer_parallel --nThreads 8 --tSteps 1000 --gSize 500 --mTemp 500 --iCX 0.2 --iCY 0.15
+Test case 2 exited with exit code : 0
+Evaluating Test case 2...
+Validation successful
+Your parallel execution time, T : 0.46241 seconds
+Expected parallel execution time, T_expected : 0.43 seconds
+Ideally, T should be equal to (or less than) T_expected
+Evaluation successful
+Evaluation script exited with exit code : 0
+
+Executing Testcase 3
+Using 8 threads
+/home/cwlui/cmpt431/assignment2/heat_transfer_parallel --nThreads 8 --tSteps 5000 --gSize 1000 --mTemp 1000 --iCX 0.05 --iCY 0.1
+Test case 3 exited with exit code : 0
+Evaluating Test case 3...
+Validation successful
+Your parallel execution time, T : 14.81 seconds
+Expected parallel execution time, T_expected : 9.8 seconds
+Ideally, T should be equal to (or less than) T_expected
+WARNING : Your parallel execution time (14.81 seconds) is more than 1.5 times higher than the expected parallel execution time (9.8 seconds).
+Ideally, your execution time should be around 9.8 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
+
+Executing Testcase 4
+Using 7 threads
+/home/cwlui/cmpt431/assignment2/heat_transfer_parallel --nThreads 7 --tSteps 2000 --gSize 1200 --mTemp 500 --iCX 0.15 --iCY 0.1
+Test case 4 exited with exit code : 0
+Evaluating Test case 4...
+Validation successful
+Your parallel execution time, T : 7.4287 seconds
+Expected parallel execution time, T_expected : 6.5 seconds
+Ideally, T should be equal to (or less than) T_expected
+Evaluation successful
+Evaluation script exited with exit code : 0
+
+Executing Testcase 5
+Using 3 threads
+/home/cwlui/cmpt431/assignment2/heat_transfer_parallel --nThreads 3 --tSteps 2000 --gSize 1007 --mTemp 800 --iCX 0.25 --iCY 0.23
+Test case 5 exited with exit code : 0
+Evaluating Test case 5...
+Validation successful
+Your parallel execution time, T : 8.5537 seconds
+Expected parallel execution time, T_expected : 8.5 seconds
+Ideally, T should be equal to (or less than) T_expected
+Evaluation successful
+Evaluation script exited with exit code : 0
+
+Executing Testcase 6
+Using 6 threads
+/home/cwlui/cmpt431/assignment2/heat_transfer_parallel --nThreads 6 --tSteps 1000 --gSize 825 --mTemp 1000 --iCX 0.1 --iCY 0.1
+Test case 6 exited with exit code : 0
+Evaluating Test case 6...
+Validation successful
+Your parallel execution time, T : 1.3578 seconds
+Expected parallel execution time, T_expected : 1.45 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
