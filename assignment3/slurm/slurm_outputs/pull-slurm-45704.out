@@ -1,0 +1,9 @@
+Using DOUBLE
+Number of Threads : 1
+Number of Iterations: 10
+Reading graph
+Created graph
+thread_id, time_taken
+0, 1.449103
+Sum of page ranks : 1966117.250000
+Time taken (in seconds) : 1.449732
