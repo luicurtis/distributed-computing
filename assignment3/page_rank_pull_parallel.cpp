@@ -97,10 +97,6 @@ void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
   // -------------------------------------------------------------------
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
-    // threads.push_back(std::thread(getPageRank, g, i, max_iters,
-    // start_vertex[i],
-    //                               end_vertex[i], pr_curr, pr_next,
-    //                               &local_time_taken[i], &barrier));
     threads.push_back(std::thread(getPageRank, std::ref(g), i, max_iters, start_vertex[i],
                                   end_vertex[i], pr_curr, pr_next,
                                   &local_time_taken[i], &barrier));
