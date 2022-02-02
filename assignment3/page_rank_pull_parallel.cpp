@@ -33,6 +33,25 @@ void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
     pr_next[i] = 0.0;
   }
 
+  std::vector<std::thread> threads(n_threads);
+  std::vector<uintV> start_vertex(n_threads, 0);
+  std::vector<uintV> end_vertex(n_threads, 0);
+  uintV min_vertices_for_each_thread = n / n_threads;
+  uintV excess_vertices = n % n_threads;
+  uintV cur_Vertex = 0;
+
+  // determine number of verticies for each thread
+  for (uint i = 0; i < n_threads; i++) {
+    start_vertex[i] = cur_Vertex;
+    if (excess_vertices > 0) {
+      end_vertex[i] = curVertex + min_vertices_for_each_thread;
+      excess_vertices--;
+    }
+    else {
+      end_vertex[i] = curVertex + min_vertices_for_each_thread - 1;
+    }
+    cur_Vertex = end_vertex[i] + 1;
+  }
   // Pull based pagerank
   timer t1;
   double time_taken = 0.0;
