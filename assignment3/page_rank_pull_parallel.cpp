@@ -1,8 +1,11 @@
-#include "core/graph.h"
-#include "core/utils.h"
+#include <stdlib.h>
+
 #include <iomanip>
 #include <iostream>
-#include <stdlib.h>
+#include <stdexcept>
+
+#include "core/graph.h"
+#include "core/utils.h"
 
 #ifdef USE_INT
 #define INIT_PAGE_RANK 100000
@@ -19,7 +22,7 @@ typedef int64_t PageRankType;
 typedef double PageRankType;
 #endif
 
-void pageRankSerial(Graph &g, int max_iters) {
+void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
   uintV n = g.n_;
 
   PageRankType *pr_curr = new PageRankType[n];
@@ -44,7 +47,7 @@ void pageRankSerial(Graph &g, int max_iters) {
         uintV u = g.vertices_[v].getInNeighbor(i);
         uintE u_out_degree = g.vertices_[u].getOutDegree();
         if (u_out_degree > 0)
-            pr_next[v] += (pr_curr[u] / (PageRankType) u_out_degree);
+          pr_next[v] += (pr_curr[u] / (PageRankType)u_out_degree);
       }
     }
     for (uintV v = 0; v < n; v++) {
@@ -96,6 +99,13 @@ int main(int argc, char *argv[]) {
   uint max_iterations = cl_options["nIterations"].as<uint>();
   std::string input_file_path = cl_options["inputFile"].as<std::string>();
 
+  // Check edge cases on inputs
+  if (n_threads <= 0 || max_iterations <= 0) {
+    throw std::invalid_argument(
+        "The commandline arguments: --n_threads and --max_iterations "
+        "must be at least 1\n");
+  }
+
 #ifdef USE_INT
   std::cout << "Using INT\n";
 #else
@@ -109,7 +119,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Reading graph\n";
   g.readGraphFromBinary<int>(input_file_path);
   std::cout << "Created graph\n";
-  pageRankSerial(g, max_iterations);
+  pageRankParallel(g, max_iterations, n_threads);
 
   return 0;
 }
