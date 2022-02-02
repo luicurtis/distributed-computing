@@ -37,23 +37,26 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
       for (uintE i = 0; i < in_degree; i++) {
         uintV u = g.vertices_[v].getInNeighbor(i);
         uintE u_out_degree = g.vertices_[u].getOutDegree();
-
         if (u_out_degree > 0)
           // TODO: make a local variable and then update pr_next_global[v] at
           // the end of the loop
           pr_next_global[v] += (pr_curr_global[u] / (PageRankType)u_out_degree);
       }
     }
-    // TODO: maybe have thread 0 go through all of the verticies instead of each
-    // thread trying to update their own range of verticies
-    for (uintV v = start; v <= end; v++) {
-      pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
 
-      // reset pr_curr for the next iteration
-      pr_curr_global[v] = pr_next_global[v];
-      pr_next_global[v] = 0.0;
-    }
     barrier->wait();
+    if (tid == 0) {
+      for (uintV v = 0; v < g.n_; v++) {
+        pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
+
+        // reset pr_curr for the next iteration
+        pr_curr_global[v] = pr_next_global[v];
+        pr_next_global[v] = 0.0;
+      }
+      barrier->wait();
+    } else {
+      barrier->wait();
+    }
   }
   *time_taken = t.stop();
 }
@@ -97,9 +100,9 @@ void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
   // -------------------------------------------------------------------
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
-    threads.push_back(std::thread(getPageRank, std::ref(g), i, max_iters, start_vertex[i],
-                                  end_vertex[i], pr_curr, pr_next,
-                                  &local_time_taken[i], &barrier));
+    threads.push_back(std::thread(getPageRank, std::ref(g), i, max_iters,
+                                  start_vertex[i], end_vertex[i], pr_curr,
+                                  pr_next, &local_time_taken[i], &barrier));
   }
 
   for (std::thread &t : threads) {
