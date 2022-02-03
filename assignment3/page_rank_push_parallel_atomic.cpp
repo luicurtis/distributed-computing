@@ -24,16 +24,26 @@ typedef double PageRankType;
 #endif
 
 void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
-                 PageRankType *pr_curr_global, PageRankType *pr_next_global,
+                 std::vector<std::atomic<PageRankType>> &pr_curr_global,
+                 std::vector<std::atomic<PageRankType>> &pr_next_global,
                  double *time_taken, CustomBarrier *barrier) {
   timer t;
+
+  t.start();
   for (int iter = 0; iter < max_iters; iter++) {
     // for each vertex 'u', process all its outNeighbors 'v'
     for (uintV u = start; u <= end; u++) {
       uintE out_degree = g.vertices_[u].getOutDegree();
       for (uintE i = 0; i < out_degree; i++) {
         uintV v = g.vertices_[u].getOutNeighbor(i);
-        pr_next_global[v] += (pr_curr_global[u] / (PageRankType)out_degree);
+        bool cas_res = false;
+        PageRankType cur_val = pr_next_global[v];
+        while (cas_res == false) {
+          cur_val = pr_next_global[v];
+          cas_res = pr_next_global[v].compare_exchange_weak(
+              cur_val,
+              cur_val + (pr_curr_global[u] / (PageRankType)out_degree));
+        }
       }
     }
     barrier->wait();
@@ -42,7 +52,7 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
         pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
 
         // reset pr_curr for the next iteration
-        pr_curr_global[v] = pr_next_global[v];
+        pr_curr_global[v].store(pr_next_global[v]);
         pr_next_global[v] = 0.0;
       }
       barrier->wait();
@@ -56,8 +66,10 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
 void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
   uintV n = g.n_;
 
-  PageRankType *pr_curr = new PageRankType[n];
-  PageRankType *pr_next = new PageRankType[n];
+  // PageRankType *pr_curr = new PageRankType[n];
+  // PageRankType *pr_next = new PageRankType[n];
+  std::vector<std::atomic<PageRankType>> pr_curr(n);
+  std::vector<std::atomic<PageRankType>> pr_next(n);
 
   for (uintV i = 0; i < n; i++) {
     pr_curr[i] = INIT_PAGE_RANK;
@@ -93,9 +105,9 @@ void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
   // -------------------------------------------------------------------
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
-    threads.push_back(std::thread(getPageRank, std::ref(g), i, max_iters,
-                                  start_vertex[i], end_vertex[i], pr_curr,
-                                  pr_next, &local_time_taken[i], &barrier));
+    threads.push_back(std::thread(
+        getPageRank, std::ref(g), i, max_iters, start_vertex[i], end_vertex[i],
+        std::ref(pr_curr), std::ref(pr_next), &local_time_taken[i], &barrier));
   }
 
   for (std::thread &t : threads) {
@@ -122,8 +134,8 @@ void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
   }
   std::cout << "Sum of page ranks : " << sum_of_page_ranks << "\n";
   std::cout << "Time taken (in seconds) : " << time_taken << "\n";
-  delete[] pr_curr;
-  delete[] pr_next;
+  // delete[] pr_curr;
+  // delete[] pr_next;
 }
 
 int main(int argc, char *argv[]) {
