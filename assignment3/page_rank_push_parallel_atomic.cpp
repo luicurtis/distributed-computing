@@ -23,6 +23,36 @@ typedef int64_t PageRankType;
 typedef double PageRankType;
 #endif
 
+void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
+                 PageRankType *pr_curr_global, PageRankType *pr_next_global,
+                 double *time_taken, CustomBarrier *barrier) {
+  timer t;
+  for (int iter = 0; iter < max_iters; iter++) {
+    // for each vertex 'u', process all its outNeighbors 'v'
+    for (uintV u = start; u <= end; u++) {
+      uintE out_degree = g.vertices_[u].getOutDegree();
+      for (uintE i = 0; i < out_degree; i++) {
+        uintV v = g.vertices_[u].getOutNeighbor(i);
+        pr_next_global[v] += (pr_curr_global[u] / (PageRankType)out_degree);
+      }
+    }
+    barrier->wait();
+    if (tid == 0) {
+      for (uintV v = 0; v < g.n_; v++) {
+        pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
+
+        // reset pr_curr for the next iteration
+        pr_curr_global[v] = pr_next_global[v];
+        pr_next_global[v] = 0.0;
+      }
+      barrier->wait();
+    } else {
+      barrier->wait();
+    }
+  }
+  *time_taken = t.stop();
+}
+
 void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
   uintV n = g.n_;
 
@@ -34,38 +64,57 @@ void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
     pr_next[i] = 0.0;
   }
 
+  std::vector<std::thread> threads(n_threads);
+  std::vector<uintV> start_vertex(n_threads, 0);
+  std::vector<uintV> end_vertex(n_threads, 0);
+  uintV min_vertices_for_each_thread = n / n_threads;
+  uintV excess_vertices = n % n_threads;
+  uintV cur_Vertex = 0;
+
+  // determine number of verticies for each thread
+  for (uint i = 0; i < n_threads; i++) {
+    start_vertex[i] = cur_Vertex;
+    if (excess_vertices > 0) {
+      end_vertex[i] = cur_Vertex + min_vertices_for_each_thread;
+      excess_vertices--;
+    } else {
+      end_vertex[i] = cur_Vertex + min_vertices_for_each_thread - 1;
+    }
+    cur_Vertex = end_vertex[i] + 1;
+  }
+
+  std::vector<double> local_time_taken(n_threads, 0.0);
+  CustomBarrier barrier(n_threads);
+
   // Push based pagerank
   timer t1;
   double time_taken = 0.0;
   // Create threads and distribute the work across T threads
   // -------------------------------------------------------------------
   t1.start();
-  for (int iter = 0; iter < max_iters; iter++) {
-    // for each vertex 'u', process all its outNeighbors 'v'
-    for (uintV u = 0; u < n; u++) {
-      uintE out_degree = g.vertices_[u].getOutDegree();
-      for (uintE i = 0; i < out_degree; i++) {
-        uintV v = g.vertices_[u].getOutNeighbor(i);
-        pr_next[v] += (pr_curr[u] / (PageRankType)out_degree);
-      }
-    }
-    for (uintV v = 0; v < n; v++) {
-      pr_next[v] = PAGE_RANK(pr_next[v]);
+  for (uint i = 0; i < n_threads; i++) {
+    threads.push_back(std::thread(getPageRank, std::ref(g), i, max_iters,
+                                  start_vertex[i], end_vertex[i], pr_curr,
+                                  pr_next, &local_time_taken[i], &barrier));
+  }
 
-      // reset pr_curr for the next iteration
-      pr_curr[v] = pr_next[v];
-      pr_next[v] = 0.0;
+  for (std::thread &t : threads) {
+    if (t.joinable()) {
+      t.join();
     }
   }
   time_taken = t1.stop();
   // -------------------------------------------------------------------
   std::cout << "thread_id, time_taken" << std::endl;
-  std::cout << "0, " << time_taken << std::endl;
+  // std::cout << "0, " << time_taken << std::endl;
   // Print the above statistics for each thread
   // Example output for 2 threads:
   // thread_id, time_taken
   // 0, 0.12
   // 1, 0.12
+  for (uint i = 0; i < n_threads; i++) {
+    std::cout << i << ", " << local_time_taken[i] << std::endl;
+  }
 
   PageRankType sum_of_page_ranks = 0;
   for (uintV u = 0; u < n; u++) {
