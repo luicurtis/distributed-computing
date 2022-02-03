@@ -23,7 +23,7 @@ typedef int64_t PageRankType;
 typedef double PageRankType;
 #endif
 
-void pageRankSerial(Graph &g, int max_iters) {
+void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
   uintV n = g.n_;
 
   PageRankType *pr_curr = new PageRankType[n];
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Reading graph\n";
   g.readGraphFromBinary<int>(input_file_path);
   std::cout << "Created graph\n";
-  pageRankSerial(g, max_iterations);
+  pageRankParallel(g, max_iterations, n_threads);
 
   return 0;
 }
