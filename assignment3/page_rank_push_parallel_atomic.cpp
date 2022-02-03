@@ -1,8 +1,12 @@
-#include "core/graph.h"
-#include "core/utils.h"
+#include <stdlib.h>
+
 #include <iomanip>
 #include <iostream>
-#include <stdlib.h>
+#include <stdexcept>
+#include <thread>
+
+#include "core/graph.h"
+#include "core/utils.h"
 
 #ifdef USE_INT
 #define INIT_PAGE_RANK 100000
@@ -42,7 +46,7 @@ void pageRankSerial(Graph &g, int max_iters) {
       uintE out_degree = g.vertices_[u].getOutDegree();
       for (uintE i = 0; i < out_degree; i++) {
         uintV v = g.vertices_[u].getOutNeighbor(i);
-        pr_next[v] += (pr_curr[u] / (PageRankType) out_degree);
+        pr_next[v] += (pr_curr[u] / (PageRankType)out_degree);
       }
     }
     for (uintV v = 0; v < n; v++) {
@@ -93,6 +97,13 @@ int main(int argc, char *argv[]) {
   uint n_threads = cl_options["nThreads"].as<uint>();
   uint max_iterations = cl_options["nIterations"].as<uint>();
   std::string input_file_path = cl_options["inputFile"].as<std::string>();
+
+  // Check edge cases on inputs
+  if (n_threads <= 0 || max_iterations <= 0) {
+    throw std::invalid_argument(
+        "The commandline arguments: --n_threads and --max_iterations "
+        "must be at least 1\n");
+  }
 
 #ifdef USE_INT
   std::cout << "Using INT" << std::endl;
