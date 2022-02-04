@@ -1,0 +1,32 @@
+Evaluating /home/cwlui/cmpt431/assignment3/
+Executing Testcase 1
+Using 4 threads
+/home/cwlui/cmpt431/assignment3/page_rank_pull_parallel --nThreads 4 --nIterations 100 --inputFile /scratch/input_graphs/roadNet-CA
+Test case 1 exited with exit code : 0
+Evaluating Test case 1...
+Validation successful
+Using DOUBLE
+Your parallel execution time, T : 4.099533 seconds
+Expected parallel execution time, T_expected : 9.0 seconds
+Ideally, T should be equal to (or less than) T_expected
+Evaluation successful
+Evaluation script exited with exit code : 0
+Executing Testcase 2
+Using 4 threads
+/home/cwlui/cmpt431/assignment3/page_rank_push_parallel --nThreads 4 --nIterations 100 --inputFile /scratch/input_graphs/roadNet-CA
+Test case 2 exited with exit code : 0
+Evaluating Test case 2...
+Validation successful
+Using DOUBLE
+Your parallel execution time, T : 122.427247 seconds
+Expected parallel execution time, T_expected : 14.0 seconds
+Ideally, T should be equal to (or less than) T_expected
+WARNING : Your parallel execution time (122.427247 seconds) is more than 1.5 times higher than the expected parallel execution time (14.0 seconds).
+Ideally, your execution time should be around 14.0 seconds
+Evaluation successful
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd-cs-cloud-02: error: *** STEP 45910.0 ON cs-cloud-02 CANCELLED AT 2022-02-04T15:16:09 DUE TO TIME LIMIT ***
+slurmstepd-cs-cloud-02: error: *** JOB 45910 ON cs-cloud-02 CANCELLED AT 2022-02-04T15:16:09 DUE TO TIME LIMIT ***
+srun: got SIGCONT
+srun: forcing job termination
+srun: error: cs-cloud-02: task 0: Terminated
