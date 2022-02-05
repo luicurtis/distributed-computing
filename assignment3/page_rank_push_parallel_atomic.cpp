@@ -47,18 +47,14 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
       }
     }
     barrier->wait();
-    if (tid == 0) {
-      for (uintV v = 0; v < g.n_; v++) {
-        pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
+    for (uintV v = start; v <= end; v++) {
+      pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
 
-        // reset pr_curr for the next iteration
+      // reset pr_curr for the next iteration
         pr_curr_global[v].store(pr_next_global[v]);
         pr_next_global[v] = 0.0;
-      }
-      barrier->wait();
-    } else {
-      barrier->wait();
     }
+    barrier->wait();
   }
   *time_taken = t.stop();
 }
