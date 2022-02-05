@@ -1,0 +1,77 @@
+Evaluating /home/cwlui/cmpt431/assignment3/
+Executing Testcase 1
+Using 4 threads
+/home/cwlui/cmpt431/assignment3/page_rank_pull_parallel --nThreads 4 --nIterations 100 --inputFile /scratch/input_graphs/roadNet-CA
+Test case 1 exited with exit code : 0
+Evaluating Test case 1...
+Validation successful
+Using DOUBLE
+Your parallel execution time, T : 3.764135 seconds
+Expected parallel execution time, T_expected : 9.0 seconds
+Ideally, T should be equal to (or less than) T_expected
+Evaluation successful
+Evaluation script exited with exit code : 0
+Executing Testcase 2
+Using 4 threads
+/home/cwlui/cmpt431/assignment3/page_rank_push_parallel --nThreads 4 --nIterations 100 --inputFile /scratch/input_graphs/roadNet-CA
+Test case 2 exited with exit code : 0
+Evaluating Test case 2...
+Validation successful
+Using DOUBLE
+Your parallel execution time, T : 62.974577 seconds
+Expected parallel execution time, T_expected : 14.0 seconds
+Ideally, T should be equal to (or less than) T_expected
+WARNING : Your parallel execution time (62.974577 seconds) is more than 1.5 times higher than the expected parallel execution time (14.0 seconds).
+Ideally, your execution time should be around 14.0 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
+Executing Testcase 3
+Using 4 threads
+/home/cwlui/cmpt431/assignment3/page_rank_push_parallel_atomic --nThreads 4 --nIterations 100 --inputFile /scratch/input_graphs/roadNet-CA
+Test case 3 exited with exit code : 0
+Evaluating Test case 3...
+Validation successful
+Using DOUBLE
+Your parallel execution time, T : 7.894215 seconds
+Expected parallel execution time, T_expected : 8.0 seconds
+Ideally, T should be equal to (or less than) T_expected
+Evaluation successful
+Evaluation script exited with exit code : 0
+Executing Testcase 4
+Using 4 threads
+/home/cwlui/cmpt431/assignment3/page_rank_pull_parallel --nThreads 4 --nIterations 50 --inputFile /scratch/input_graphs/web-Google
+Test case 4 exited with exit code : 0
+Evaluating Test case 4...
+Validation successful
+Using DOUBLE
+Your parallel execution time, T : 4.876 seconds
+Expected parallel execution time, T_expected : 8.0 seconds
+Ideally, T should be equal to (or less than) T_expected
+Evaluation successful
+Evaluation script exited with exit code : 0
+Executing Testcase 5
+Using 4 threads
+/home/cwlui/cmpt431/assignment3/page_rank_push_parallel --nThreads 4 --nIterations 50 --inputFile /scratch/input_graphs/web-Google
+Test case 5 exited with exit code : 0
+Evaluating Test case 5...
+Validation successful
+Using DOUBLE
+Your parallel execution time, T : 33.233495 seconds
+Expected parallel execution time, T_expected : 16.0 seconds
+Ideally, T should be equal to (or less than) T_expected
+WARNING : Your parallel execution time (33.233495 seconds) is more than 1.5 times higher than the expected parallel execution time (16.0 seconds).
+Ideally, your execution time should be around 16.0 seconds
+Evaluation successful
+Evaluation script exited with exit code : 0
+Executing Testcase 6
+Using 4 threads
+/home/cwlui/cmpt431/assignment3/page_rank_push_parallel_atomic --nThreads 4 --nIterations 50 --inputFile /scratch/input_graphs/web-Google
+Test case 6 exited with exit code : 0
+Evaluating Test case 6...
+Validation successful
+Using DOUBLE
+Your parallel execution time, T : 12.446446 seconds
+Expected parallel execution time, T_expected : 13.0 seconds
+Ideally, T should be equal to (or less than) T_expected
+Evaluation successful
+Evaluation script exited with exit code : 0
