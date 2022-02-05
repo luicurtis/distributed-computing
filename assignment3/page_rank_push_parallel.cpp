@@ -34,13 +34,12 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
     // for each vertex 'u', process all its outNeighbors 'v'
     for (uintV u = start; u <= end; u++) {
       uintE out_degree = g.vertices_[u].getOutDegree();
+      pr_next_mutex.lock();
       for (uintE i = 0; i < out_degree; i++) {
-
         uintV v = g.vertices_[u].getOutNeighbor(i);
-        pr_next_mutex.lock();
         pr_next_global[v] += (pr_curr_global[u] / (PageRankType)out_degree);
-        pr_next_mutex.unlock();
       }
+      pr_next_mutex.unlock();
     }
     barrier->wait();
     if (tid == 0) {
@@ -91,7 +90,6 @@ void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
 
   std::vector<double> local_time_taken(n_threads, 0.0);
   CustomBarrier barrier(n_threads);
-  // std::vector<std::mutex> pr_next_mutex(n_threads);
   std::mutex pr_next_mutex;
 
   // Push based pagerank
