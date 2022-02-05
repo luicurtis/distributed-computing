@@ -33,15 +33,16 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
     // for each vertex 'v', process all its inNeighbors 'u'
     for (uintV v = start; v <= end; v++) {
       uintE in_degree = g.vertices_[v].getInDegree();
-
+      PageRankType pr_next_local = 0;
       for (uintE i = 0; i < in_degree; i++) {
         uintV u = g.vertices_[v].getInNeighbor(i);
         uintE u_out_degree = g.vertices_[u].getOutDegree();
         if (u_out_degree > 0)
           // TODO: make a local variable and then update pr_next_global[v] at
           // the end of the loop
-          pr_next_global[v] += (pr_curr_global[u] / (PageRankType)u_out_degree);
+          pr_next_local += (pr_curr_global[u] / (PageRankType)u_out_degree);
       }
+      pr_next_global[v] += pr_next_local;
     }
 
     barrier->wait();
