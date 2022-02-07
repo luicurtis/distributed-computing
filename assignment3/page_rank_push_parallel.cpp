@@ -44,10 +44,8 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
     }
     barrier->wait();
     for (uintV v = start; v <= end; v++) {
-      pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
-
       // reset pr_curr for the next iteration
-      pr_curr_global[v] = pr_next_global[v];
+      pr_curr_global[v] = PAGE_RANK(pr_next_global[v]);
       pr_next_global[v] = 0.0;
     }
     barrier->wait();
