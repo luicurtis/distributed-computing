@@ -38,11 +38,12 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
         uintV v = g.vertices_[u].getOutNeighbor(i);
         bool cas_res = false;
         PageRankType cur_val = pr_next_global[v];
+        PageRankType quotient = (pr_curr_global[u] / (PageRankType)out_degree);
         while (cas_res == false) {
           cur_val = pr_next_global[v];
           cas_res = pr_next_global[v].compare_exchange_weak(
               cur_val,
-              cur_val + (pr_curr_global[u] / (PageRankType)out_degree));
+              cur_val + quotient);
         }
       }
     }

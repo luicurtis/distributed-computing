@@ -34,10 +34,11 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
     // for each vertex 'u', process all its outNeighbors 'v'
     for (uintV u = start; u <= end; u++) {
       uintE out_degree = g.vertices_[u].getOutDegree();
+      PageRankType quotient = (pr_curr_global[u] / (PageRankType)out_degree);
       for (uintE i = 0; i < out_degree; i++) {
         uintV v = g.vertices_[u].getOutNeighbor(i);
         pr_next_mutex[v].lock();
-        pr_next_global[v] += (pr_curr_global[u] / (PageRankType)out_degree);
+        pr_next_global[v] += quotient;
         pr_next_mutex[v].unlock();
       }
     }
