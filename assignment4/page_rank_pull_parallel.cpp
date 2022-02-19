@@ -52,12 +52,11 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
       pr_next_global[v] = 0.0;
     }
     barrier->wait();
-
   }
   *time_taken = t.stop();
 }
 
-void pageRankParallel(Graph &g, int max_iters, uint n_threads) {
+void strategy1(Graph &g, int max_iters, uint n_threads) {
   uintV n = g.n_;
   PageRankType *pr_curr = new PageRankType[n];
   PageRankType *pr_next = new PageRankType[n];
@@ -143,18 +142,26 @@ int main(int argc, char *argv[]) {
           {"inputFile", "Input graph file path",
            cxxopts::value<std::string>()->default_value(
                "/scratch/input_graphs/roadNet-CA")},
+          {"strategy", "Task decomposition and mapping strategy",
+           cxxopts::value<uint>()->default_value("1")},
       });
 
   auto cl_options = options.parse(argc, argv);
   uint n_threads = cl_options["nThreads"].as<uint>();
   uint max_iterations = cl_options["nIterations"].as<uint>();
   std::string input_file_path = cl_options["inputFile"].as<std::string>();
+  uint strategy = cl_options["strategy"].as<uint>();
 
   // Check edge cases on inputs
   if (n_threads <= 0 || max_iterations <= 0) {
     throw std::invalid_argument(
         "The commandline arguments: --n_threads and --max_iterations "
         "must be at least 1\n");
+  }
+  if (strategy <= 0 || strategy > 4) {
+    throw std::invalid_argument(
+        "The commandline arguments: --strategy only accepts values 1, 2, 3, "
+        "and 4\n");
   }
 
 #ifdef USE_INT
@@ -170,7 +177,20 @@ int main(int argc, char *argv[]) {
   std::cout << "Reading graph\n";
   g.readGraphFromBinary<int>(input_file_path);
   std::cout << "Created graph\n";
-  pageRankParallel(g, max_iterations, n_threads);
+
+  switch (strategy) {
+    case 1:
+      strategy1(g, max_iterations, n_threads);
+      break;
+    case 2:
+      break;
+    case 3:
+      break;
+    case 4: 
+      break;
+    default:
+      strategy1(g, max_iterations, n_threads);
+  }
 
   return 0;
 }
