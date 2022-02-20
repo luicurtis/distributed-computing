@@ -23,7 +23,8 @@ typedef int64_t PageRankType;
 typedef double PageRankType;
 #endif
 
-void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
+void getPageRank(Graph &g, uint tid, int max_iters,
+                 std::vector<uintV> assigned_vertex,
                  PageRankType *pr_curr_global, PageRankType *pr_next_global,
                  double *time_taken, CustomBarrier *barrier) {
   timer t;
@@ -31,7 +32,8 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
   t.start();
   for (int iter = 0; iter < max_iters; iter++) {
     // for each vertex 'v', process all its inNeighbors 'u'
-    for (uintV v = start; v <= end; v++) {
+    for (int i = 0; i < assigned_vertex.size(); i++) {
+      uintV v = assigned_vertex[i];
       uintE in_degree = g.vertices_[v].getInDegree();
       PageRankType pr_next_local = 0;
       for (uintE i = 0; i < in_degree; i++) {
@@ -44,7 +46,8 @@ void getPageRank(Graph &g, uint tid, int max_iters, uintV start, uintV end,
     }
 
     barrier->wait();
-    for (uintV v = start; v <= end; v++) {
+    for (int i = 0; i < assigned_vertex.size(); i++) {
+      uintV v = assigned_vertex[i];
       pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
 
       // reset pr_curr for the next iteration
@@ -67,22 +70,29 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
   }
 
   std::vector<std::thread> threads(n_threads);
-  std::vector<uintV> start_vertex(n_threads, 0);
-  std::vector<uintV> end_vertex(n_threads, 0);
+  std::vector<std::vector<uintV>> assigned_vertex(n_threads,
+                                                  std::vector<uintV>());
   uintV min_vertices_for_each_thread = n / n_threads;
   uintV excess_vertices = n % n_threads;
   uintV cur_Vertex = 0;
+  uintV start_vertex = 0;
 
   // determine number of verticies for each thread
   for (uint i = 0; i < n_threads; i++) {
-    start_vertex[i] = cur_Vertex;
     if (excess_vertices > 0) {
-      end_vertex[i] = cur_Vertex + min_vertices_for_each_thread;
+      for (uintV v = start_vertex;
+           v <= start_vertex + min_vertices_for_each_thread; v++) {
+        assigned_vertex[i].push_back(v);
+      }
       excess_vertices--;
+      start_vertex = start_vertex + min_vertices_for_each_thread + 1;
     } else {
-      end_vertex[i] = cur_Vertex + min_vertices_for_each_thread - 1;
+      for (uintV v = start_vertex;
+           v <= start_vertex + min_vertices_for_each_thread - 1; v++) {
+        assigned_vertex[i].push_back(v);
     }
-    cur_Vertex = end_vertex[i] + 1;
+      start_vertex = start_vertex + min_vertices_for_each_thread;
+    }
   }
 
   std::vector<double> local_time_taken(n_threads, 0.0);
@@ -96,8 +106,8 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
     threads.push_back(std::thread(getPageRank, std::ref(g), i, max_iters,
-                                  start_vertex[i], end_vertex[i], pr_curr,
-                                  pr_next, &local_time_taken[i], &barrier));
+                                  assigned_vertex[i], pr_curr, pr_next,
+                                  &local_time_taken[i], &barrier));
   }
 
   for (std::thread &t : threads) {
