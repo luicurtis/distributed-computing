@@ -134,7 +134,7 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
         assigned_vertex[i].push_back(v);
         uintE in_degree = g.vertices_[v].getInDegree();
         assigned_edges[i] += in_degree;
-    }
+      }
       start_vertex = start_vertex + min_vertices_for_each_thread;
     }
   }
@@ -162,6 +162,7 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
       t.join();
     }
   }
+
   time_taken = t1.stop();
   // -------------------------------------------------------------------
   std::vector<double> getNextVertex_time(n_threads, 0.0);
@@ -184,54 +185,58 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   }
 
   std::vector<std::thread> threads(n_threads);
-  std::vector<std::vector<uintV>> assigned_vertex(n_threads, std::vector<uintV>());
+  std::vector<std::vector<uintV>> assigned_vertex(n_threads,
+                                                  std::vector<uintV>());
   std::vector<uintE> assigned_edges(n_threads, 0);
   int edges_per_graph = m / n_threads;
   int total_assigned_edges = 0;
   int curr_vertex = 0;
-
-  std::cout << "n: " << n << std::endl;
-  std::cout << "m: " << m << std::endl;
-  std::cout<< "edges per graph: " << edges_per_graph << std::endl;
 
   // assign vertices based on in-degree
   // Each thread gets assigned vertices until the total assigned edges is >=
   // (thread_id+1) * m/n_threads
   for (int i = 0; i < n_threads; i++) {
     int curr_assigned_edges = 0;
-    while (total_assigned_edges < ((i+1) * edges_per_graph) && curr_vertex < n) {
+    while (total_assigned_edges < ((i + 1) * edges_per_graph) &&
+           curr_vertex < n) {
       assigned_vertex[i].push_back(curr_vertex);
       uintE in_degree = g.vertices_[curr_vertex].getInDegree();
       total_assigned_edges += in_degree;
       curr_assigned_edges += in_degree;
       curr_vertex++;
     }
-    std::cout << "cur vertex: " << curr_vertex << std::endl;
-    std::cout << "total assigned edges: " << total_assigned_edges << std::endl;
     assigned_edges[i] = curr_assigned_edges;
   }
 
+  std::vector<double> local_time_taken(n_threads, 0.0);
+  std::vector<double> barrier1_time(n_threads, 0.0);
+  std::vector<double> barrier2_time(n_threads, 0.0);
+  CustomBarrier barrier(n_threads);
+
+  timer t1;
+  double time_taken = 0.0;
+  // Create threads and distribute the work across T threads
   // -------------------------------------------------------------------
-  std::cout << "thread_id, num_vertices, num_edges, barrier1_time, "
-               "barrier2_time, getNextVertex_time, total_time"
-            << std::endl;
-  // std::cout << "0, " << time_taken << std::endl;
-  // Print the above statistics for each thread
-  // Example output for 2 threads:
-  // thread_id, time_taken
-  // 0, 0.12
-  // 1, 0.12
+  t1.start();
   for (uint i = 0; i < n_threads; i++) {
-    std::cout << i << ", " << assigned_vertex[i].size() << ", "
-              << assigned_edges[i] << ", " << std::endl;
+    threads.push_back(std::thread(getPageRank, std::ref(g), i, max_iters,
+                                  assigned_vertex[i], pr_curr, pr_next,
+                                  &local_time_taken[i], &barrier1_time[i],
+                                  &barrier2_time[i], &barrier));
   }
 
-  // PageRankType sum_of_page_ranks = 0;
-  // for (uintV u = 0; u < n; u++) {
-  //   sum_of_page_ranks += pr_curr[u];
-  // }
-  // std::cout << "Sum of page ranks : " << sum_of_page_ranks << "\n";
-  // std::cout << "Time taken (in seconds) : " << time_taken << "\n";
+  for (std::thread &t : threads) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+  time_taken = t1.stop();
+
+  // -------------------------------------------------------------------
+  std::vector<double> getNextVertex_time(n_threads, 0.0);
+  printStats(n, n_threads, pr_curr, assigned_vertex, assigned_edges,
+             barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
+             time_taken);
   delete[] pr_curr;
   delete[] pr_next;
 }
@@ -279,6 +284,7 @@ int main(int argc, char *argv[]) {
 #endif
   std::cout << std::fixed;
   std::cout << "Number of Threads : " << n_threads << std::endl;
+  std::cout << "Strategy : " << strategy << std::endl;
   std::cout << "Number of Iterations: " << max_iterations << std::endl;
 
   Graph g;
