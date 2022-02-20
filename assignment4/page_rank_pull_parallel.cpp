@@ -114,7 +114,6 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
   std::vector<uintE> assigned_edges(n_threads, 0);
   uintV min_vertices_for_each_thread = n / n_threads;
   uintV excess_vertices = n % n_threads;
-  uintV cur_Vertex = 0;
   uintV start_vertex = 0;
 
   // determine number of verticies for each thread
