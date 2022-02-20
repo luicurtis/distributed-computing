@@ -31,6 +31,8 @@ void getPageRank(Graph &g, uint tid, int max_iters,
   timer t;
   timer b1;
   timer b2;
+  double b1_time;
+  double b2_time;
 
   t.start();
   for (int iter = 0; iter < max_iters; iter++) {
@@ -50,7 +52,7 @@ void getPageRank(Graph &g, uint tid, int max_iters,
 
     b1.start();
     barrier->wait();
-    *barrier1_time += b1.stop();
+    b1_time += b1.stop();
 
     for (int i = 0; i < assigned_vertex.size(); i++) {
       uintV v = assigned_vertex[i];
@@ -63,9 +65,10 @@ void getPageRank(Graph &g, uint tid, int max_iters,
 
     b2.start();
     barrier->wait();
-    *barrier2_time += b2.stop();
+    b2_time += b2.stop();
   }
-
+  *barrier1_time = b1_time;
+  *barrier2_time = b2_time;
   *total_time_taken = t.stop();
 }
 
