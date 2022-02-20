@@ -206,6 +206,13 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
     }
     assigned_edges[i] = curr_assigned_edges;
   }
+  // Assign any left over vertices to the last thread
+  while (curr_vertex < n) {
+      assigned_vertex[n_threads-1].push_back(curr_vertex);
+      uintE in_degree = g.vertices_[curr_vertex].getInDegree();
+      assigned_edges[n_threads-1] += in_degree;
+      curr_vertex++;
+  }
 
   std::vector<double> local_time_taken(n_threads, 0.0);
   std::vector<double> barrier1_time(n_threads, 0.0);
