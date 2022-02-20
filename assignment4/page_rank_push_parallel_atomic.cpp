@@ -122,8 +122,8 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
       for (uintV v = start_vertex;
            v <= start_vertex + min_vertices_for_each_thread; v++) {
         assigned_vertex[i].push_back(v);
-        uintE in_degree = g.vertices_[v].getInDegree();
-        assigned_edges[i] += in_degree;
+        uintE out_degree = g.vertices_[v].getOutDegree();
+        assigned_edges[i] += out_degree;
       }
       excess_vertices--;
       start_vertex = start_vertex + min_vertices_for_each_thread + 1;
@@ -131,8 +131,8 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
       for (uintV v = start_vertex;
            v <= start_vertex + min_vertices_for_each_thread - 1; v++) {
         assigned_vertex[i].push_back(v);
-        uintE in_degree = g.vertices_[v].getInDegree();
-        assigned_edges[i] += in_degree;
+        uintE out_degree = g.vertices_[v].getOutDegree();
+        assigned_edges[i] += out_degree;
       }
       start_vertex = start_vertex + min_vertices_for_each_thread;
     }
