@@ -169,6 +169,72 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
              time_taken);
 }
 
+void strategy2(Graph &g, int max_iters, uint n_threads) {
+  uintV n = g.n_;
+  uintE m = g.m_;
+  std::vector<std::atomic<PageRankType>> pr_curr(n);
+  std::vector<std::atomic<PageRankType>> pr_next(n);
+
+  for (uintV i = 0; i < n; i++) {
+    pr_curr[i] = INIT_PAGE_RANK;
+    pr_next[i] = 0.0;
+  }
+
+  std::vector<std::thread> threads(n_threads);
+  std::vector<std::vector<uintV>> assigned_vertex(n_threads,
+                                                  std::vector<uintV>());
+  std::vector<uintE> assigned_edges(n_threads, 0);
+  int edges_per_graph = m / n_threads;
+  int total_assigned_edges = 0;
+  int curr_vertex = 0;
+
+  // assign vertices based on out-degree
+  // Each thread gets assigned vertices until the total assigned edges is >=
+  // (thread_id+1) * m/n_threads
+  for (int i = 0; i < n_threads; i++) {
+    int curr_assigned_edges = 0;
+    while (total_assigned_edges < ((i + 1) * edges_per_graph) &&
+           curr_vertex < n) {
+      assigned_vertex[i].push_back(curr_vertex);
+      uintE out_degree = g.vertices_[curr_vertex].getOutDegree();
+      total_assigned_edges += out_degree;
+      curr_assigned_edges += out_degree;
+      curr_vertex++;
+    }
+    assigned_edges[i] = curr_assigned_edges;
+  }
+
+  std::vector<double> local_time_taken(n_threads, 0.0);
+  std::vector<double> barrier1_time(n_threads, 0.0);
+  std::vector<double> barrier2_time(n_threads, 0.0);
+  CustomBarrier barrier(n_threads);
+
+  timer t1;
+  double time_taken = 0.0;
+  // Create threads and distribute the work across T threads
+  // -------------------------------------------------------------------
+  t1.start();
+  for (uint i = 0; i < n_threads; i++) {
+    threads.push_back(
+        std::thread(getPageRank, std::ref(g), i, max_iters, assigned_vertex[i],
+                    std::ref(pr_curr), std::ref(pr_next), &local_time_taken[i],
+                    &barrier1_time[i], &barrier2_time[i], &barrier));
+  }
+
+  for (std::thread &t : threads) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+  time_taken = t1.stop();
+
+  // -------------------------------------------------------------------
+  std::vector<double> getNextVertex_time(n_threads, 0.0);
+  printStats(n, n_threads, std::ref(pr_curr), assigned_vertex, assigned_edges,
+             barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
+             time_taken);
+}
+
 int main(int argc, char *argv[]) {
   cxxopts::Options options(
       "page_rank_push",
@@ -212,6 +278,7 @@ int main(int argc, char *argv[]) {
 #endif
   std::cout << std::fixed;
   std::cout << "Number of Threads : " << n_threads << std::endl;
+  std::cout << "Strategy : " << strategy << std::endl;
   std::cout << "Number of Iterations: " << max_iterations << std::endl;
 
   Graph g;
@@ -224,6 +291,7 @@ int main(int argc, char *argv[]) {
       strategy1(g, max_iterations, n_threads);
       break;
     case 2:
+      strategy2(g, max_iterations, n_threads);
       break;
     case 3:
       break;
