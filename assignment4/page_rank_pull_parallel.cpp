@@ -278,6 +278,8 @@ int main(int argc, char *argv[]) {
                "/scratch/input_graphs/roadNet-CA")},
           {"strategy", "Task decomposition and mapping strategy",
            cxxopts::value<uint>()->default_value("1")},
+          {"granularity", "Vertex Decomposition Granularity",
+           cxxopts::value<uint>()->default_value("1")},
       });
 
   auto cl_options = options.parse(argc, argv);
@@ -285,6 +287,7 @@ int main(int argc, char *argv[]) {
   uint max_iterations = cl_options["nIterations"].as<uint>();
   std::string input_file_path = cl_options["inputFile"].as<std::string>();
   uint strategy = cl_options["strategy"].as<uint>();
+  uint k = cl_options["granularity"].as<uint>();
 
   // Check edge cases on inputs
   if (n_threads <= 0 || max_iterations <= 0) {
@@ -294,8 +297,14 @@ int main(int argc, char *argv[]) {
   }
   if (strategy <= 0 || strategy > 4) {
     throw std::invalid_argument(
-        "The commandline arguments: --strategy only accepts values 1, 2, 3, "
+        "The commandline argument: --strategy only accepts values 1, 2, 3, "
         "and 4\n");
+  }
+
+  if (k <= 0) {
+    throw std::invalid_argument(
+        "The commandline argument: --granularity must be a positive integer "
+        "value\n");
   }
 
 #ifdef USE_INT
