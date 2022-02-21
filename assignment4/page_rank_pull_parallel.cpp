@@ -23,7 +23,20 @@ typedef int64_t PageRankType;
 typedef double PageRankType;
 #endif
 
-void getPageRank(Graph &g, uint tid, int max_iters,
+class DynamicMapping {
+ public:
+  uint k;
+  std::atomic<uintV> next_vertex;
+
+  DynamicMapping() : k(1), next_vertex(0) {}
+  DynamicMapping(uint k) {
+    this->k = k;
+    next_vertex = 0;
+  }
+
+  uintV getNextVertexToBeProcessed() { return next_vertex.fetch_add(k); }
+};
+
                  std::vector<uintV> assigned_vertex,
                  PageRankType *pr_curr_global, PageRankType *pr_next_global,
                  double *total_time_taken, double *barrier1_time,
