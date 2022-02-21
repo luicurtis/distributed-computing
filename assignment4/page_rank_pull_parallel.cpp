@@ -91,8 +91,8 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
 }
 
 void printStats(uintV n, uint n_threads, PageRankType *pr_curr,
-                std::vector<std::vector<uintV>> assigned_vertex,
-                std::vector<uintE> assigned_edges,
+                std::vector<uintV> vertices_processed,
+                std::vector<uintE> edges_processed,
                 std::vector<double> barrier1_time,
                 std::vector<double> barrier2_time,
                 std::vector<double> getNextVertex_time,
@@ -102,8 +102,8 @@ void printStats(uintV n, uint n_threads, PageRankType *pr_curr,
             << std::endl;
 
   for (uint i = 0; i < n_threads; i++) {
-    std::cout << i << ", " << assigned_vertex[i].size() << ", "
-              << assigned_edges[i] << ", " << barrier1_time[i] << ", "
+    std::cout << i << ", " << vertices_processed[i] << ", "
+              << edges_processed[i] << ", " << barrier1_time[i] << ", "
               << barrier2_time[i] << ", " << getNextVertex_time[i] << ", "
               << local_time_taken[i] << std::endl;
   }
@@ -129,7 +129,7 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
   std::vector<std::thread> threads(n_threads);
   std::vector<std::vector<uintV>> assigned_vertex(n_threads,
                                                   std::vector<uintV>());
-  std::vector<uintE> assigned_edges(n_threads, 0);
+  std::vector<uintE> edges_processed(n_threads, 0);
   uintV min_vertices_for_each_thread = n / n_threads;
   uintV excess_vertices = n % n_threads;
   uintV start_vertex = 0;
@@ -141,7 +141,7 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
            v <= start_vertex + min_vertices_for_each_thread; v++) {
         assigned_vertex[i].push_back(v);
         uintE in_degree = g.vertices_[v].getInDegree();
-        assigned_edges[i] += in_degree;
+        edges_processed[i] += in_degree;
       }
       excess_vertices--;
       start_vertex = start_vertex + min_vertices_for_each_thread + 1;
@@ -150,7 +150,7 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
            v <= start_vertex + min_vertices_for_each_thread - 1; v++) {
         assigned_vertex[i].push_back(v);
         uintE in_degree = g.vertices_[v].getInDegree();
-        assigned_edges[i] += in_degree;
+        edges_processed[i] += in_degree;
       }
       start_vertex = start_vertex + min_vertices_for_each_thread;
     }
@@ -183,7 +183,13 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
   time_taken = t1.stop();
   // -------------------------------------------------------------------
   std::vector<double> getNextVertex_time(n_threads, 0.0);
-  printStats(n, n_threads, pr_curr, assigned_vertex, assigned_edges,
+  std::vector<uintV> vertices_processed;
+  for (uint i = 0; i < n_threads; i++) {
+    // FIXME: May need to update this to assigned_vertex[i].size() * max_iters.
+    // Same for edges
+    vertices_processed.push_back(assigned_vertex[i].size());
+  }
+  printStats(n, n_threads, pr_curr, vertices_processed, edges_processed,
              barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
              time_taken);
   delete[] pr_curr;
@@ -204,7 +210,7 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   std::vector<std::thread> threads(n_threads);
   std::vector<std::vector<uintV>> assigned_vertex(n_threads,
                                                   std::vector<uintV>());
-  std::vector<uintE> assigned_edges(n_threads, 0);
+  std::vector<uintE> edges_processed(n_threads, 0);
   int edges_per_graph = m / n_threads;
   int total_assigned_edges = 0;
   int curr_vertex = 0;
@@ -222,13 +228,13 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
       curr_assigned_edges += in_degree;
       curr_vertex++;
     }
-    assigned_edges[i] = curr_assigned_edges;
+    edges_processed[i] = curr_assigned_edges;
   }
   // Assign any left over vertices to the last thread
   while (curr_vertex < n) {
     assigned_vertex[n_threads - 1].push_back(curr_vertex);
       uintE in_degree = g.vertices_[curr_vertex].getInDegree();
-    assigned_edges[n_threads - 1] += in_degree;
+    edges_processed[n_threads - 1] += in_degree;
       curr_vertex++;
   }
 
@@ -258,7 +264,13 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
 
   // -------------------------------------------------------------------
   std::vector<double> getNextVertex_time(n_threads, 0.0);
-  printStats(n, n_threads, pr_curr, assigned_vertex, assigned_edges,
+  std::vector<uintV> vertices_processed;
+  for (uint i = 0; i < n_threads; i++) {
+    // FIXME: May need to update this to assigned_vertex[i].size() * max_iters.
+    // Same for edges
+    vertices_processed.push_back(assigned_vertex[i].size());
+  }
+  printStats(n, n_threads, pr_curr, vertices_processed, edges_processed,
              barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
              time_taken);
   delete[] pr_curr;
@@ -276,9 +288,8 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
     pr_next[i] = 0.0;
   }
   std::vector<std::thread> threads(n_threads);
-  std::vector<std::vector<uintV>> assigned_vertex(n_threads,
-                                                  std::vector<uintV>());
-  std::vector<uintE> assigned_edges(n_threads, 0);
+  std::vector<uintV> vertices_processed(n_threads, 0);
+  std::vector<uintE> edges_processed(n_threads, 0);
   std::vector<double> local_time_taken(n_threads, 0.0);
   std::vector<double> barrier1_time(n_threads, 0.0);
   std::vector<double> barrier2_time(n_threads, 0.0);
@@ -308,7 +319,7 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
 
   // -------------------------------------------------------------------
 
-  printStats(n, n_threads, pr_curr, assigned_vertex, assigned_edges,
+  printStats(n, n_threads, pr_curr, vertices_processed, edges_processed,
              barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
              time_taken);
   delete[] pr_curr;
