@@ -35,6 +35,7 @@ class DynamicMapping {
   }
 
   uintV getNextVertexToBeProcessed() { return next_vertex.fetch_add(k); }
+  void resetNextVertex() { next_vertex = 0; }
 };
 
 void getPageRankStatic(Graph &g, uint tid, int max_iters,
