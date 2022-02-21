@@ -47,13 +47,14 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
   timer t;
   timer b1;
   timer b2;
-  double b1_time;
-  double b2_time;
-  // FIXME: May need to update the count for num vertices and edges processed
+  double b1_time = 0.0;
+  double b2_time = 0.0;
+  int n = assigned_vertex.size();
+
   t.start();
   for (int iter = 0; iter < max_iters; iter++) {
     // for each vertex 'v', process all its inNeighbors 'u'
-    for (int i = 0; i < assigned_vertex.size(); i++) {
+    for (int i = 0; i < n; i++) {
       uintV v = assigned_vertex[i];
       uintE in_degree = g.vertices_[v].getInDegree();
       PageRankType pr_next_local = 0;
@@ -70,7 +71,7 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
     barrier->wait();
     b1_time += b1.stop();
 
-    for (int i = 0; i < assigned_vertex.size(); i++) {
+    for (int i = 0; i < n; i++) {
       uintV v = assigned_vertex[i];
       pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
 
@@ -83,6 +84,7 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
     barrier->wait();
     b2_time += b2.stop();
   }
+  *total_time_taken = t.stop();
   *barrier1_time = b1_time;
   *barrier2_time = b2_time;
   *total_time_taken = t.stop();
