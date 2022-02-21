@@ -39,7 +39,7 @@ class DynamicMapping {
 };
 
 void getPageRankStatic(Graph &g, uint tid, int max_iters,
-                 std::vector<uintV> assigned_vertex,
+                       std::vector<uintV> assigned_vertex,
                        PageRankType *pr_curr_global,
                        PageRankType *pr_next_global, double *total_time_taken,
                        double *barrier1_time, double *barrier2_time,
@@ -308,9 +308,9 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   // Assign any left over vertices to the last thread
   while (curr_vertex < n) {
     assigned_vertex[n_threads - 1].push_back(curr_vertex);
-      uintE in_degree = g.vertices_[curr_vertex].getInDegree();
+    uintE in_degree = g.vertices_[curr_vertex].getInDegree();
     edges_processed[n_threads - 1] += in_degree;
-      curr_vertex++;
+    curr_vertex++;
   }
 
   std::vector<double> local_time_taken(n_threads, 0.0);
@@ -379,10 +379,11 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
   // -------------------------------------------------------------------
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
-    threads.push_back(std::thread(
-        getPageRankDynamic, std::ref(g), i, max_iters, k, assigned_vertex[i],
-        pr_curr, pr_next, &local_time_taken[i], &barrier1_time[i],
-        &barrier2_time[i], &getNextVertex_time[i], &barrier, &dm));
+    threads.push_back(
+        std::thread(getPageRankDynamic, std::ref(g), i, max_iters, k,
+                    &vertices_processed[i], &edges_processed[i], pr_curr,
+                    pr_next, &local_time_taken[i], &barrier1_time[i],
+                    &barrier2_time[i], &getNextVertex_time[i], &barrier, &dm));
   }
 
   for (std::thread &t : threads) {
