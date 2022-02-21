@@ -37,16 +37,18 @@ class DynamicMapping {
   uintV getNextVertexToBeProcessed() { return next_vertex.fetch_add(k); }
 };
 
+void getPageRankStatic(Graph &g, uint tid, int max_iters,
                  std::vector<uintV> assigned_vertex,
-                 PageRankType *pr_curr_global, PageRankType *pr_next_global,
-                 double *total_time_taken, double *barrier1_time,
-                 double *barrier2_time, CustomBarrier *barrier) {
+                       PageRankType *pr_curr_global,
+                       PageRankType *pr_next_global, double *total_time_taken,
+                       double *barrier1_time, double *barrier2_time,
+                       CustomBarrier *barrier) {
   timer t;
   timer b1;
   timer b2;
   double b1_time;
   double b2_time;
-
+  // FIXME: May need to update the count for num vertices and edges processed
   t.start();
   for (int iter = 0; iter < max_iters; iter++) {
     // for each vertex 'v', process all its inNeighbors 'u'
@@ -163,7 +165,7 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
   // -------------------------------------------------------------------
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
-    threads.push_back(std::thread(getPageRank, std::ref(g), i, max_iters,
+    threads.push_back(std::thread(getPageRankStatic, std::ref(g), i, max_iters,
                                   assigned_vertex[i], pr_curr, pr_next,
                                   &local_time_taken[i], &barrier1_time[i],
                                   &barrier2_time[i], &barrier));
@@ -221,9 +223,9 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   }
   // Assign any left over vertices to the last thread
   while (curr_vertex < n) {
-      assigned_vertex[n_threads-1].push_back(curr_vertex);
+    assigned_vertex[n_threads - 1].push_back(curr_vertex);
       uintE in_degree = g.vertices_[curr_vertex].getInDegree();
-      assigned_edges[n_threads-1] += in_degree;
+    assigned_edges[n_threads - 1] += in_degree;
       curr_vertex++;
   }
 
@@ -238,7 +240,7 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   // -------------------------------------------------------------------
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
-    threads.push_back(std::thread(getPageRank, std::ref(g), i, max_iters,
+    threads.push_back(std::thread(getPageRankStatic, std::ref(g), i, max_iters,
                                   assigned_vertex[i], pr_curr, pr_next,
                                   &local_time_taken[i], &barrier1_time[i],
                                   &barrier2_time[i], &barrier));
