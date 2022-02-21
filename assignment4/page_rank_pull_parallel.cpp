@@ -262,6 +262,56 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   delete[] pr_next;
 }
 
+void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
+  uintV n = g.n_;
+  uintE m = g.m_;
+  PageRankType *pr_curr = new PageRankType[n];
+  PageRankType *pr_next = new PageRankType[n];
+
+  for (uintV i = 0; i < n; i++) {
+    pr_curr[i] = INIT_PAGE_RANK;
+    pr_next[i] = 0.0;
+  }
+  std::vector<std::thread> threads(n_threads);
+  std::vector<std::vector<uintV>> assigned_vertex(n_threads,
+                                                  std::vector<uintV>());
+  std::vector<uintE> assigned_edges(n_threads, 0);
+  std::vector<double> local_time_taken(n_threads, 0.0);
+  std::vector<double> barrier1_time(n_threads, 0.0);
+  std::vector<double> barrier2_time(n_threads, 0.0);
+  std::vector<double> getNextVertex_time(n_threads, 0.0);
+  CustomBarrier barrier(n_threads);
+  DynamicMapping dm(k);
+
+  timer t1;
+  double time_taken = 0.0;
+
+  // Create threads and distribute the work across T threads
+  // -------------------------------------------------------------------
+  t1.start();
+  for (uint i = 0; i < n_threads; i++) {
+    threads.push_back(std::thread(
+        getPageRankDynamic, std::ref(g), i, max_iters, k, assigned_vertex[i],
+        pr_curr, pr_next, &local_time_taken[i], &barrier1_time[i],
+        &barrier2_time[i], &getNextVertex_time[i], &barrier, &dm));
+  }
+
+  for (std::thread &t : threads) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+  time_taken = t1.stop();
+
+  // -------------------------------------------------------------------
+
+  printStats(n, n_threads, pr_curr, assigned_vertex, assigned_edges,
+             barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
+             time_taken);
+  delete[] pr_curr;
+  delete[] pr_next;
+}
+
 int main(int argc, char *argv[]) {
   cxxopts::Options options(
       "page_rank_pull",
@@ -330,6 +380,7 @@ int main(int argc, char *argv[]) {
       strategy2(g, max_iterations, n_threads);
       break;
     case 3:
+      strategy3(g, max_iterations, n_threads, k);
       break;
     case 4:
       break;
