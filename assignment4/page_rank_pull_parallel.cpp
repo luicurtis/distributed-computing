@@ -87,7 +87,82 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
   *total_time_taken = t.stop();
   *barrier1_time = b1_time;
   *barrier2_time = b2_time;
+}
+
+void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
+                        uintV *vertices_processed, uintE *edges_processed,
+                        PageRankType *pr_curr_global,
+                        PageRankType *pr_next_global, double *total_time_taken,
+                        double *barrier1_time, double *barrier2_time,
+                        double *getNextVertex_time, CustomBarrier *barrier,
+                        DynamicMapping *dm) {
+  timer t;
+  timer b1;
+  timer b2;
+  timer get_vertex;
+  double b1_time = 0.0;
+  double b2_time = 0.0;
+  double get_vertex_time = 0.0;
+  uintV n = g.n_;
+  uintV v_processed = 0;
+  uintE e_processed = 0;
+
+  t.start();
+  for (int iter = 0; iter < max_iters; iter++) {
+    while (true) {
+      get_vertex.start();
+      uintV v = dm->getNextVertexToBeProcessed();
+      get_vertex_time += get_vertex.stop();
+
+      if (v >= n) break;
+      uintE in_degree = g.vertices_[v].getInDegree();
+      e_processed += in_degree;
+      PageRankType pr_next_local = 0;
+      for (uintE i = 0; i < in_degree; i++) {
+        uintV u = g.vertices_[v].getInNeighbor(i);
+        uintE u_out_degree = g.vertices_[u].getOutDegree();
+        if (u_out_degree > 0)
+          pr_next_local += (pr_curr_global[u] / (PageRankType)u_out_degree);
+      }
+      pr_next_global[v] += pr_next_local;
+    }
+
+    b1.start();
+    barrier->wait();
+    b1_time += b1.stop();
+
+    // reset dynamic mapping count
+    dm->resetNextVertex();
+    barrier->wait();
+
+    while (true) {
+      get_vertex.start();
+      uintV v = dm->getNextVertexToBeProcessed();
+      get_vertex_time += get_vertex.stop();
+
+      if (v >= n) break;
+      v_processed++;
+      pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
+
+      // reset pr_curr for the next iteration
+      pr_curr_global[v] = pr_next_global[v];
+      pr_next_global[v] = 0.0;
+    }
+
+    b2.start();
+    barrier->wait();
+    b2_time += b2.stop();
+    // reset dynamic mapping count
+    dm->resetNextVertex();
+    barrier->wait();
+  }
+
   *total_time_taken = t.stop();
+  *barrier1_time = b1_time;
+  *barrier2_time = b2_time;
+  *vertices_processed = v_processed;
+  *edges_processed = e_processed;
+  *getNextVertex_time = get_vertex_time;
 }
 
 void printStats(uintV n, uint n_threads, PageRankType *pr_curr,
