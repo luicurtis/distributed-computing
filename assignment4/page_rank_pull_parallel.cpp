@@ -482,7 +482,7 @@ int main(int argc, char *argv[]) {
       strategy2(g, max_iterations, n_threads);
       break;
     case 3:
-      strategy3(g, max_iterations, n_threads, k);
+      strategy3(g, max_iterations, n_threads, 1);
       break;
     case 4:
       break;
