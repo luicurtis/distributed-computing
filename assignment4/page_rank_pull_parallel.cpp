@@ -26,16 +26,34 @@ typedef double PageRankType;
 class DynamicMapping {
  public:
   uint k;
+  uintV n;
+  uint num_of_threads;
+  std::atomic<uint> threads_done;
   std::atomic<uintV> next_vertex;
 
-  DynamicMapping() : k(1), next_vertex(0) {}
-  DynamicMapping(uint k) {
+  DynamicMapping()
+      : k(1), n(0), num_of_threads(1), threads_done(0), next_vertex(0) {}
+  DynamicMapping(uint k, uintV n, uint n_threads) {
     this->k = k;
+    this->n = n;
+    num_of_threads = n_threads;
+    threads_done = 0;
     next_vertex = 0;
   }
 
-  uintV getNextVertexToBeProcessed() { return next_vertex.fetch_add(k); }
-  void resetNextVertex() { next_vertex = 0; }
+  uintV getNextVertexToBeProcessed() {
+    uintV cur_next = next_vertex.fetch_add(k);
+    if (cur_next >= n) {
+      uint cur_threads = threads_done.fetch_add(1);
+      if (cur_threads + 1 == num_of_threads) {
+        threads_done = 0;
+        next_vertex = 0;
+      }
+      return -1;
+    } else {
+      return cur_next;
+    }
+  }
 };
 
 void getPageRankStatic(Graph &g, uint tid, int max_iters,
@@ -103,7 +121,6 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
   double b1_time = 0.0;
   double b2_time = 0.0;
   double get_vertex_time = 0.0;
-  uintV n = g.n_;
   uintV v_processed = 0;
   uintE e_processed = 0;
 
@@ -113,8 +130,7 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
       get_vertex.start();
       uintV v = dm->getNextVertexToBeProcessed();
       get_vertex_time += get_vertex.stop();
-
-      if (v >= n) break;
+      if (v == -1) break;
       uintE in_degree = g.vertices_[v].getInDegree();
       e_processed += in_degree;
       PageRankType pr_next_local = 0;
@@ -131,16 +147,11 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
     barrier->wait();
     b1_time += b1.stop();
 
-    // reset dynamic mapping count
-    dm->resetNextVertex();
-    barrier->wait();
-
     while (true) {
       get_vertex.start();
       uintV v = dm->getNextVertexToBeProcessed();
       get_vertex_time += get_vertex.stop();
-
-      if (v >= n) break;
+      if (v == -1) break;
       v_processed++;
       pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
 
@@ -152,9 +163,6 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
     b2.start();
     barrier->wait();
     b2_time += b2.stop();
-    // reset dynamic mapping count
-    dm->resetNextVertex();
-    barrier->wait();
   }
 
   *total_time_taken = t.stop();
@@ -370,7 +378,7 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
   std::vector<double> barrier2_time(n_threads, 0.0);
   std::vector<double> getNextVertex_time(n_threads, 0.0);
   CustomBarrier barrier(n_threads);
-  DynamicMapping dm(k);
+  DynamicMapping dm(k, n, n_threads);
 
   timer t1;
   double time_taken = 0.0;
