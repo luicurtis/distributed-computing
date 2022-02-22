@@ -268,13 +268,15 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
   std::vector<double> getNextVertex_time(n_threads, 0.0);
   std::vector<uintV> vertices_processed;
   for (uint i = 0; i < n_threads; i++) {
-    // FIXME: May need to update this to assigned_vertex[i].size() * max_iters.
-    // Same for edges
-    vertices_processed.push_back(assigned_vertex[i].size());
+    // NOTE: since static mapping goes over each vertex and edge max_iters
+    // amount of times need to multiple total number by max_iters
+    vertices_processed.push_back(assigned_vertex[i].size() * max_iters);
+    edges_processed[i] *= max_iters;
   }
   printStats(n, n_threads, pr_curr, vertices_processed, edges_processed,
              barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
              time_taken);
+
   delete[] pr_curr;
   delete[] pr_next;
 }
@@ -349,13 +351,15 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   std::vector<double> getNextVertex_time(n_threads, 0.0);
   std::vector<uintV> vertices_processed;
   for (uint i = 0; i < n_threads; i++) {
-    // FIXME: May need to update this to assigned_vertex[i].size() * max_iters.
-    // Same for edges
-    vertices_processed.push_back(assigned_vertex[i].size());
+    // NOTE: since static mapping goes over each vertex and edge max_iters
+    // amount of times need to multiple total number by max_iters
+    vertices_processed.push_back(assigned_vertex[i].size() * max_iters);
+    edges_processed[i] *= max_iters;
   }
   printStats(n, n_threads, pr_curr, vertices_processed, edges_processed,
              barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
              time_taken);
+
   delete[] pr_curr;
   delete[] pr_next;
 }
