@@ -106,7 +106,7 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
   *barrier2_time = b2_time;
 }
 
-void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
+void getPageRankDynamic(Graph &g, uint tid, int max_iters,
                         uintV *vertices_processed, uintE *edges_processed,
                         PageRankType *pr_curr_global,
                         PageRankType *pr_next_global, double *total_time_taken,
@@ -391,7 +391,7 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
     threads.push_back(
-        std::thread(getPageRankDynamic, std::ref(g), i, max_iters, k,
+        std::thread(getPageRankDynamic, std::ref(g), i, max_iters,
                     &vertices_processed[i], &edges_processed[i], pr_curr,
                     pr_next, &local_time_taken[i], &barrier1_time[i],
                     &barrier2_time[i], &getNextVertex_time[i], &barrier, &dm));
