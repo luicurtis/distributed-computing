@@ -131,16 +131,16 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
       get_vertex_time += get_vertex.stop();
       if (v == -1) break;
       for (uint j = 0; j < k; j++) {
-      uintE in_degree = g.vertices_[v].getInDegree();
-      e_processed += in_degree;
-      PageRankType pr_next_local = 0;
-      for (uintE i = 0; i < in_degree; i++) {
-        uintV u = g.vertices_[v].getInNeighbor(i);
-        uintE u_out_degree = g.vertices_[u].getOutDegree();
-        if (u_out_degree > 0)
-          pr_next_local += (pr_curr_global[u] / (PageRankType)u_out_degree);
-      }
-      pr_next_global[v] += pr_next_local;
+        uintE in_degree = g.vertices_[v].getInDegree();
+        e_processed += in_degree;
+        PageRankType pr_next_local = 0;
+        for (uintE i = 0; i < in_degree; i++) {
+          uintV u = g.vertices_[v].getInNeighbor(i);
+          uintE u_out_degree = g.vertices_[u].getOutDegree();
+          if (u_out_degree > 0)
+            pr_next_local += (pr_curr_global[u] / (PageRankType)u_out_degree);
+        }
+        pr_next_global[v] += pr_next_local;
         v++;
         if (v >= n) break;
       }
@@ -156,10 +156,10 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
       get_vertex_time += get_vertex.stop();
       if (v == -1) break;
       for (uint j = 0; j < k; j++) {
-      v_processed++;
-      // reset pr_curr for the next iteration
+        v_processed++;
+        // reset pr_curr for the next iteration
         pr_curr_global[v] = PAGE_RANK(pr_next_global[v]);
-      pr_next_global[v] = 0.0;
+        pr_next_global[v] = 0.0;
         v++;
         if (v >= n) break;
       }
@@ -420,6 +420,10 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
   delete[] pr_next;
 }
 
+void strategy4(Graph &g, int max_iters, uint n_threads, uint k) {
+  strategy3(g, max_iters, n_threads, k);
+}
+
 int main(int argc, char *argv[]) {
   cxxopts::Options options(
       "page_rank_pull",
@@ -493,6 +497,7 @@ int main(int argc, char *argv[]) {
       strategy3(g, max_iterations, n_threads, 1);
       break;
     case 4:
+      strategy4(g, max_iterations, n_threads, k);
       break;
     default:
       strategy1(g, max_iterations, n_threads);
