@@ -105,7 +105,7 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
   *barrier2_time = b2_time;
 }
 
-void getPageRankDynamic(Graph &g, uint tid, int max_iters,
+void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
                         uintV *vertices_processed, uintE *edges_processed,
                         PageRankType *pr_curr_global,
                         PageRankType *pr_next_global, double *total_time_taken,
@@ -121,6 +121,7 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters,
   double get_vertex_time = 0.0;
   uintV v_processed = 0;
   uintE e_processed = 0;
+  uintV n = g.n_;
 
   t.start();
   for (int iter = 0; iter < max_iters; iter++) {
@@ -129,6 +130,7 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters,
       uintV v = dm->getNextVertexToBeProcessed();
       get_vertex_time += get_vertex.stop();
       if (v == -1) break;
+      for (uint j = 0; j < k; j++) {
       uintE in_degree = g.vertices_[v].getInDegree();
       e_processed += in_degree;
       PageRankType pr_next_local = 0;
@@ -139,6 +141,9 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters,
           pr_next_local += (pr_curr_global[u] / (PageRankType)u_out_degree);
       }
       pr_next_global[v] += pr_next_local;
+        v++;
+        if (v >= n) break;
+      }
     }
 
     b1.start();
@@ -150,10 +155,14 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters,
       uintV v = dm->getNextVertexToBeProcessed();
       get_vertex_time += get_vertex.stop();
       if (v == -1) break;
+      for (uint j = 0; j < k; j++) {
       v_processed++;
       // reset pr_curr for the next iteration
-      pr_curr_global[v]  = PAGE_RANK(pr_next_global[v]);
+        pr_curr_global[v] = PAGE_RANK(pr_next_global[v]);
       pr_next_global[v] = 0.0;
+        v++;
+        if (v >= n) break;
+      }
     }
 
     b2.start();
@@ -388,11 +397,11 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
   // -------------------------------------------------------------------
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
-    threads.push_back(std::thread(getPageRankDynamic, std::ref(g), i, max_iters,
-                                  &vertices_processed[i], &edges_processed[i],
-                                  pr_curr, pr_next, &local_time_taken[i],
-                                  &barrier1_time[i], &barrier2_time[i],
-                                  &getNextVertex_time[i], &barrier, &dm));
+    threads.push_back(
+        std::thread(getPageRankDynamic, std::ref(g), i, max_iters, k,
+                    &vertices_processed[i], &edges_processed[i], pr_curr,
+                    pr_next, &local_time_taken[i], &barrier1_time[i],
+                    &barrier2_time[i], &getNextVertex_time[i], &barrier, &dm));
   }
 
   for (std::thread &t : threads) {
