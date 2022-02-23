@@ -91,9 +91,8 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
 
     for (int i = 0; i < n; i++) {
       uintV v = assigned_vertex[i];
-      pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
       // reset pr_curr for the next iteration
-      pr_curr_global[v] = pr_next_global[v];
+      pr_curr_global[v] = PAGE_RANK(pr_next_global[v]);
       pr_next_global[v] = 0.0;
     }
 
@@ -152,10 +151,8 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters,
       get_vertex_time += get_vertex.stop();
       if (v == -1) break;
       v_processed++;
-      pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
-
       // reset pr_curr for the next iteration
-      pr_curr_global[v] = pr_next_global[v];
+      pr_curr_global[v]  = PAGE_RANK(pr_next_global[v]);
       pr_next_global[v] = 0.0;
     }
 
