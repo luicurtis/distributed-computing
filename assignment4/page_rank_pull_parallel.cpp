@@ -465,8 +465,10 @@ int main(int argc, char *argv[]) {
   std::cout << "Using DOUBLE\n";
 #endif
   std::cout << std::fixed;
+  // FIXME: Update the output to match the sample output
   std::cout << "Number of Threads : " << n_threads << std::endl;
   std::cout << "Strategy : " << strategy << std::endl;
+  std::cout << "Granularity : " << k << std::endl;
   std::cout << "Number of Iterations: " << max_iterations << std::endl;
 
   Graph g;
