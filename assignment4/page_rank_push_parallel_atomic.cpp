@@ -106,6 +106,82 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
   *barrier2_time = b2_time;
 }
 
+void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
+                        uintV *vertices_processed, uintE *edges_processed,
+                        std::vector<std::atomic<PageRankType>> &pr_curr_global,
+                        std::vector<std::atomic<PageRankType>> &pr_next_global,
+                        double *total_time_taken, double *barrier1_time,
+                        double *barrier2_time, double *getNextVertex_time,
+                        CustomBarrier *barrier, DynamicMapping *dm) {
+  timer t;
+  timer b1;
+  timer b2;
+  timer get_vertex;
+  double b1_time = 0.0;
+  double b2_time = 0.0;
+  double get_vertex_time = 0.0;
+  uintV v_processed = 0;
+  uintE e_processed = 0;
+  uintV n = g.n_;
+
+  t.start();
+  for (int iter = 0; iter < max_iters; iter++) {
+    while (true) {
+      get_vertex.start();
+      uintV u = dm->getNextVertexToBeProcessed();
+      get_vertex_time += get_vertex.stop();
+      if (u == -1) break;
+      for (uint j = 0; j < k; j++) {
+        uintE out_degree = g.vertices_[u].getOutDegree();
+        e_processed += out_degree;
+        for (uintE i = 0; i < out_degree; i++) {
+          uintV v = g.vertices_[u].getOutNeighbor(i);
+          PageRankType cur_val = pr_next_global[v];
+          PageRankType quotient =
+              (pr_curr_global[u] / (PageRankType)out_degree);
+          bool cas_res = false;
+          while (cas_res == false) {
+            cur_val = pr_next_global[v];
+            cas_res = pr_next_global[v].compare_exchange_weak(
+                cur_val, cur_val + quotient);
+          }
+        }
+        u++;
+        if (u >= n) break;
+      }
+    }
+
+    b1.start();
+    barrier->wait();
+    b1_time += b1.stop();
+
+    while (true) {
+      get_vertex.start();
+      uintV v = dm->getNextVertexToBeProcessed();
+      get_vertex_time += get_vertex.stop();
+      if (v == -1) break;
+      for (uint j = 0; j < k; j++) {
+        v_processed++;
+        // reset pr_curr for the next iteration
+        pr_curr_global[v] = PAGE_RANK(pr_next_global[v]);
+        pr_next_global[v] = 0.0;
+        v++;
+        if (v >= n) break;
+      }
+    }
+
+    b2.start();
+    barrier->wait();
+    b2_time += b2.stop();
+  }
+
+  *total_time_taken = t.stop();
+  *barrier1_time = b1_time;
+  *barrier2_time = b2_time;
+  *vertices_processed = v_processed;
+  *edges_processed = e_processed;
+  *getNextVertex_time = get_vertex_time;
+}
 void printStats(uintV n, uint n_threads,
                 std::vector<std::atomic<PageRankType>> &pr_curr,
                 std::vector<uintV> vertices_processed,
@@ -291,6 +367,53 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
              local_time_taken, time_taken);
 }
 
+void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
+  uintV n = g.n_;
+  uintE m = g.m_;
+  std::vector<std::atomic<PageRankType>> pr_curr(n);
+  std::vector<std::atomic<PageRankType>> pr_next(n);
+
+  for (uintV i = 0; i < n; i++) {
+    pr_curr[i] = INIT_PAGE_RANK;
+    pr_next[i] = 0.0;
+  }
+  std::vector<std::thread> threads(n_threads);
+  std::vector<uintV> vertices_processed(n_threads, 0);
+  std::vector<uintE> edges_processed(n_threads, 0);
+  std::vector<double> local_time_taken(n_threads, 0.0);
+  std::vector<double> barrier1_time(n_threads, 0.0);
+  std::vector<double> barrier2_time(n_threads, 0.0);
+  std::vector<double> getNextVertex_time(n_threads, 0.0);
+  CustomBarrier barrier(n_threads);
+  DynamicMapping dm(k, n, n_threads);
+
+  timer t1;
+  double time_taken = 0.0;
+
+  // Create threads and distribute the work across T threads
+  // -------------------------------------------------------------------
+  t1.start();
+  for (uint i = 0; i < n_threads; i++) {
+    threads.push_back(std::thread(
+        getPageRankDynamic, std::ref(g), i, max_iters, k,
+        &vertices_processed[i], &edges_processed[i], std::ref(pr_curr),
+        std::ref(pr_next), &local_time_taken[i], &barrier1_time[i],
+        &barrier2_time[i], &getNextVertex_time[i], &barrier, &dm));
+  }
+
+  for (std::thread &t : threads) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+  time_taken = t1.stop();
+  // -------------------------------------------------------------------
+
+  printStats(n, n_threads, pr_curr, vertices_processed, edges_processed,
+             barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
+             time_taken);
+}
+
 int main(int argc, char *argv[]) {
   cxxopts::Options options(
       "page_rank_push",
@@ -307,6 +430,8 @@ int main(int argc, char *argv[]) {
                "/scratch/input_graphs/roadNet-CA")},
           {"strategy", "Task decomposition and mapping strategy",
            cxxopts::value<uint>()->default_value("1")},
+          {"granularity", "Vertex Decomposition Granularity",
+           cxxopts::value<uint>()->default_value("1")},
       });
 
   auto cl_options = options.parse(argc, argv);
@@ -314,6 +439,7 @@ int main(int argc, char *argv[]) {
   uint max_iterations = cl_options["nIterations"].as<uint>();
   std::string input_file_path = cl_options["inputFile"].as<std::string>();
   uint strategy = cl_options["strategy"].as<uint>();
+  uint k = cl_options["granularity"].as<uint>();
 
   // Check edge cases on inputs
   if (n_threads <= 0 || max_iterations <= 0) {
@@ -327,14 +453,22 @@ int main(int argc, char *argv[]) {
         "and 4\n");
   }
 
+  if (k <= 0) {
+    throw std::invalid_argument(
+        "The commandline argument: --granularity must be a positive integer "
+        "value\n");
+  }
+
 #ifdef USE_INT
   std::cout << "Using INT" << std::endl;
 #else
   std::cout << "Using DOUBLE" << std::endl;
 #endif
   std::cout << std::fixed;
+  // FIXME: Update the output to match the sample output
   std::cout << "Number of Threads : " << n_threads << std::endl;
   std::cout << "Strategy : " << strategy << std::endl;
+  std::cout << "Granularity : " << k << std::endl;
   std::cout << "Number of Iterations: " << max_iterations << std::endl;
 
   Graph g;
@@ -350,6 +484,7 @@ int main(int argc, char *argv[]) {
       strategy2(g, max_iterations, n_threads);
       break;
     case 3:
+      strategy3(g, max_iterations, n_threads, 1);
       break;
     case 4:
       break;
