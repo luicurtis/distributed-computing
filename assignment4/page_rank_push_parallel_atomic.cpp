@@ -23,6 +23,38 @@ typedef int64_t PageRankType;
 typedef double PageRankType;
 #endif
 
+class DynamicMapping {
+ public:
+  uint k;
+  uintV n;
+  uint num_of_threads;
+  std::atomic<uint> threads_done;
+  std::atomic<uintV> next_vertex;
+
+  DynamicMapping()
+      : k(1), n(0), num_of_threads(1), threads_done(0), next_vertex(0) {}
+  DynamicMapping(uint k, uintV n, uint n_threads) {
+    this->k = k;
+    this->n = n;
+    num_of_threads = n_threads;
+    threads_done = 0;
+    next_vertex = 0;
+  }
+  uintV getNextVertexToBeProcessed() {
+    uintV cur_next = next_vertex.fetch_add(k);
+    if (cur_next >= n) {
+      uint cur_threads = threads_done.fetch_add(1);
+      if (cur_threads + 1 == num_of_threads) {
+        threads_done = 0;
+        next_vertex = 0;
+      }
+      return -1;
+    } else {
+      return cur_next;
+    }
+  }
+};
+
 void getPageRank(Graph &g, uint tid, int max_iters,
                  std::vector<uintV> assigned_vertex,
                  std::vector<std::atomic<PageRankType>> &pr_curr_global,
@@ -205,10 +237,10 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   }
   // Assign any left over vertices to the last thread
   while (curr_vertex < n) {
-      assigned_vertex[n_threads-1].push_back(curr_vertex);
-      uintE out_degree = g.vertices_[curr_vertex].getOutDegree();
-      assigned_edges[n_threads-1] += out_degree;
-      curr_vertex++;
+    assigned_vertex[n_threads - 1].push_back(curr_vertex);
+    uintE out_degree = g.vertices_[curr_vertex].getOutDegree();
+    assigned_edges[n_threads - 1] += out_degree;
+    curr_vertex++;
   }
 
   std::vector<double> local_time_taken(n_threads, 0.0);

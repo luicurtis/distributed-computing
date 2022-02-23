@@ -92,7 +92,6 @@ void getPageRankStatic(Graph &g, uint tid, int max_iters,
     for (int i = 0; i < n; i++) {
       uintV v = assigned_vertex[i];
       pr_next_global[v] = PAGE_RANK(pr_next_global[v]);
-
       // reset pr_curr for the next iteration
       pr_curr_global[v] = pr_next_global[v];
       pr_next_global[v] = 0.0;
@@ -410,6 +409,7 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
   printStats(n, n_threads, pr_curr, vertices_processed, edges_processed,
              barrier1_time, barrier2_time, getNextVertex_time, local_time_taken,
              time_taken);
+
   delete[] pr_curr;
   delete[] pr_next;
 }
