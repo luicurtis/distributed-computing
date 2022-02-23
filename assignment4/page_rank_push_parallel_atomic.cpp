@@ -414,6 +414,10 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
              time_taken);
 }
 
+void strategy4(Graph &g, int max_iters, uint n_threads, uint k) {
+  strategy3(g, max_iters, n_threads, k);
+}
+
 int main(int argc, char *argv[]) {
   cxxopts::Options options(
       "page_rank_push",
@@ -487,6 +491,7 @@ int main(int argc, char *argv[]) {
       strategy3(g, max_iterations, n_threads, 1);
       break;
     case 4:
+      strategy4(g, max_iterations, n_threads, k);
       break;
     default:
       strategy1(g, max_iterations, n_threads);
