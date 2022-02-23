@@ -55,7 +55,7 @@ class DynamicMapping {
   }
 };
 
-void getPageRank(Graph &g, uint tid, int max_iters,
+void getPageRankStatic(Graph &g, uint tid, int max_iters,
                  std::vector<uintV> assigned_vertex,
                  std::vector<std::atomic<PageRankType>> &pr_curr_global,
                  std::vector<std::atomic<PageRankType>> &pr_next_global,
@@ -183,7 +183,7 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
     threads.push_back(
-        std::thread(getPageRank, std::ref(g), i, max_iters, assigned_vertex[i],
+        std::thread(getPageRankStatic, std::ref(g), i, max_iters, assigned_vertex[i],
                     std::ref(pr_curr), std::ref(pr_next), &local_time_taken[i],
                     &barrier1_time[i], &barrier2_time[i], &barrier));
   }
@@ -255,7 +255,7 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
     threads.push_back(
-        std::thread(getPageRank, std::ref(g), i, max_iters, assigned_vertex[i],
+        std::thread(getPageRankStatic, std::ref(g), i, max_iters, assigned_vertex[i],
                     std::ref(pr_curr), std::ref(pr_next), &local_time_taken[i],
                     &barrier1_time[i], &barrier2_time[i], &barrier));
   }
