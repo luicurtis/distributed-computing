@@ -205,7 +205,7 @@ void printStats(uintV n, uint n_threads,
   for (uintV u = 0; u < n; u++) {
     sum_of_page_ranks += pr_curr[u];
   }
-  std::cout << "Sum of page ranks : " << sum_of_page_ranks << "\n";
+  std::cout << "Sum of page rank : " << sum_of_page_ranks << "\n";
   std::cout << "Time taken (in seconds) : " << time_taken << "\n";
 }
 
@@ -451,6 +451,7 @@ int main(int argc, char *argv[]) {
         "The commandline arguments: --n_threads and --max_iterations "
         "must be at least 1\n");
   }
+
   if (strategy <= 0 || strategy > 4) {
     throw std::invalid_argument(
         "The commandline arguments: --strategy only accepts values 1, 2, 3, "
@@ -469,11 +470,10 @@ int main(int argc, char *argv[]) {
   std::cout << "Using DOUBLE" << std::endl;
 #endif
   std::cout << std::fixed;
-  // FIXME: Update the output to match the sample output
-  std::cout << "Number of Threads : " << n_threads << std::endl;
+  std::cout << "Number of threads : " << n_threads << std::endl;
   std::cout << "Strategy : " << strategy << std::endl;
   std::cout << "Granularity : " << k << std::endl;
-  std::cout << "Number of Iterations: " << max_iterations << std::endl;
+  std::cout << "Iterations : " << max_iterations << std::endl;
 
   Graph g;
   std::cout << "Reading graph\n";
