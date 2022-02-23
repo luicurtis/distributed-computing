@@ -264,6 +264,7 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
+
   std::vector<double> getNextVertex_time(n_threads, 0.0);
   std::vector<uintV> vertices_processed;
   for (uint i = 0; i < n_threads; i++) {
@@ -345,8 +346,8 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
     }
   }
   time_taken = t1.stop();
-
   // -------------------------------------------------------------------
+
   std::vector<double> getNextVertex_time(n_threads, 0.0);
   std::vector<uintV> vertices_processed;
   for (uint i = 0; i < n_threads; i++) {
@@ -390,11 +391,11 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
   // -------------------------------------------------------------------
   t1.start();
   for (uint i = 0; i < n_threads; i++) {
-    threads.push_back(
-        std::thread(getPageRankDynamic, std::ref(g), i, max_iters,
-                    &vertices_processed[i], &edges_processed[i], pr_curr,
-                    pr_next, &local_time_taken[i], &barrier1_time[i],
-                    &barrier2_time[i], &getNextVertex_time[i], &barrier, &dm));
+    threads.push_back(std::thread(getPageRankDynamic, std::ref(g), i, max_iters,
+                                  &vertices_processed[i], &edges_processed[i],
+                                  pr_curr, pr_next, &local_time_taken[i],
+                                  &barrier1_time[i], &barrier2_time[i],
+                                  &getNextVertex_time[i], &barrier, &dm));
   }
 
   for (std::thread &t : threads) {
@@ -403,7 +404,6 @@ void strategy3(Graph &g, int max_iters, uint n_threads, uint k) {
     }
   }
   time_taken = t1.stop();
-
   // -------------------------------------------------------------------
 
   printStats(n, n_threads, pr_curr, vertices_processed, edges_processed,
