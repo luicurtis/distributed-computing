@@ -200,7 +200,7 @@ void printStats(uintV n, uint n_threads, PageRankType *pr_curr,
   for (uintV u = 0; u < n; u++) {
     sum_of_page_ranks += pr_curr[u];
   }
-  std::cout << "Sum of page rank : " << sum_of_page_ranks << "\n";
+  std::cout << "Sum of page ranks : " << sum_of_page_ranks << "\n";
   std::cout << "Time taken (in seconds) : " << time_taken << "\n";
 }
 
@@ -476,7 +476,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Using DOUBLE\n";
 #endif
   std::cout << std::fixed;
-  std::cout << "Number of threads : " << n_threads << std::endl;
+  std::cout << "Number of Threads : " << n_threads << std::endl;
   std::cout << "Strategy : " << strategy << std::endl;
   std::cout << "Granularity : " << k << std::endl;
   std::cout << "Iterations : " << max_iterations << std::endl;
