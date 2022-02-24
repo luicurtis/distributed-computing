@@ -1,0 +1,10 @@
+Using DOUBLE
+Number of Threads : 4
+Strategy : 3
+Granularity : 100
+Iterations : 100
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd-cs-cloud-02: error: *** STEP 47095.0 ON cs-cloud-02 CANCELLED AT 2022-02-24T09:41:10 DUE TO TIME LIMIT ***
+slurmstepd-cs-cloud-02: error: *** JOB 47095 ON cs-cloud-02 CANCELLED AT 2022-02-24T09:41:10 DUE TO TIME LIMIT ***
+srun: got SIGCONT
+srun: forcing job termination

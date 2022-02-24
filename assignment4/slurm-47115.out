@@ -1,0 +1,10 @@
+Using DOUBLE
+Number of Threads : 4
+Strategy : 1
+Granularity : 100
+Iterations : 10
+slurmstepd-cs-cloud-02: error: Step 47115.0 exceeded memory limit (33488928 > 1048576), being killed
+slurmstepd-cs-cloud-02: error: Exceeded job memory limit
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd-cs-cloud-02: error: *** STEP 47115.0 ON cs-cloud-02 CANCELLED AT 2022-02-24T10:31:22 ***
+srun: error: cs-cloud-02: task 0: Killed

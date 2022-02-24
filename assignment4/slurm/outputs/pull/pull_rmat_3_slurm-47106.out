@@ -1,0 +1,14 @@
+Using DOUBLE
+Number of Threads : 4
+Strategy : 2
+Granularity : 100
+Iterations : 10
+Reading graph
+Created graph
+thread_id, num_vertices, num_edges, barrier1_time, barrier2_time, getNextVertex_time, total_time
+0, 60940360, 125000020, 0.350536, 0.056446, 0.000000, 21.449412
+1, 61953420, 125000020, 0.249884, 0.056438, 0.000000, 21.407623
+2, 63534020, 124999960, 0.131270, 0.071871, 0.000000, 21.364176
+3, 63572190, 125000000, 0.065559, 0.073501, 0.000000, 21.320932
+Sum of page ranks : 14350615.434774
+Time taken (in seconds) : 22.103187
