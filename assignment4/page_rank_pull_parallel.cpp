@@ -221,7 +221,16 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
   uintV min_vertices_for_each_thread = n / n_threads;
   uintV excess_vertices = n % n_threads;
   uintV start_vertex = 0;
+  std::vector<double> local_time_taken(n_threads, 0.0);
+  std::vector<double> barrier1_time(n_threads, 0.0);
+  std::vector<double> barrier2_time(n_threads, 0.0);
+  CustomBarrier barrier(n_threads);
+  timer t1;
+  double time_taken = 0.0;
 
+  // start timing from allocating vertices and edges
+  // -------------------------------------------------------------------
+  t1.start();
   // determine number of verticies for each thread
   for (uint i = 0; i < n_threads; i++) {
     if (excess_vertices > 0) {
@@ -244,17 +253,7 @@ void strategy1(Graph &g, int max_iters, uint n_threads) {
     }
   }
 
-  std::vector<double> local_time_taken(n_threads, 0.0);
-  std::vector<double> barrier1_time(n_threads, 0.0);
-  std::vector<double> barrier2_time(n_threads, 0.0);
-  CustomBarrier barrier(n_threads);
-
-  // Pull based pagerank
-  timer t1;
-  double time_taken = 0.0;
   // Create threads and distribute the work across T threads
-  // -------------------------------------------------------------------
-  t1.start();
   for (uint i = 0; i < n_threads; i++) {
     threads.push_back(std::thread(getPageRankStatic, std::ref(g), i, max_iters,
                                   assigned_vertex[i], pr_curr, pr_next,
@@ -305,7 +304,16 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
   int edges_per_graph = m / n_threads;
   int total_assigned_edges = 0;
   int curr_vertex = 0;
+  std::vector<double> local_time_taken(n_threads, 0.0);
+  std::vector<double> barrier1_time(n_threads, 0.0);
+  std::vector<double> barrier2_time(n_threads, 0.0);
+  CustomBarrier barrier(n_threads);
+  timer t1;
+  double time_taken = 0.0;
 
+  // start timing from allocating vertices and edges
+  // -------------------------------------------------------------------
+  t1.start();
   // assign vertices based on in-degree
   // Each thread gets assigned vertices until the total assigned edges is >=
   // (thread_id+1) * m/n_threads
@@ -329,16 +337,7 @@ void strategy2(Graph &g, int max_iters, uint n_threads) {
     curr_vertex++;
   }
 
-  std::vector<double> local_time_taken(n_threads, 0.0);
-  std::vector<double> barrier1_time(n_threads, 0.0);
-  std::vector<double> barrier2_time(n_threads, 0.0);
-  CustomBarrier barrier(n_threads);
-
-  timer t1;
-  double time_taken = 0.0;
   // Create threads and distribute the work across T threads
-  // -------------------------------------------------------------------
-  t1.start();
   for (uint i = 0; i < n_threads; i++) {
     threads.push_back(std::thread(getPageRankStatic, std::ref(g), i, max_iters,
                                   assigned_vertex[i], pr_curr, pr_next,
