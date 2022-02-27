@@ -125,11 +125,13 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
 
   t.start();
   for (int iter = 0; iter < max_iters; iter++) {
+    std::vector<uintV> iter_vertices;
     while (true) {
       get_vertex.start();
       uintV v = dm->getNextVertexToBeProcessed();
       get_vertex_time += get_vertex.stop();
       if (v == -1) break;
+      iter_vertices.push_back(v);
       for (uint j = 0; j < k; j++) {
         uintE in_degree = g.vertices_[v].getInDegree();
         e_processed += in_degree;
@@ -150,14 +152,11 @@ void getPageRankDynamic(Graph &g, uint tid, int max_iters, uint k,
     barrier->wait();
     b1_time += b1.stop();
 
-    while (true) {
-      get_vertex.start();
-      uintV v = dm->getNextVertexToBeProcessed();
-      get_vertex_time += get_vertex.stop();
-      if (v == -1) break;
-      for (uint j = 0; j < k; j++) {
-        v_processed++;
+    for (uintV start : iter_vertices) {
+      uint v = start;
+      for (uint i = 0; i < k; i++) {
         // reset pr_curr for the next iteration
+        v_processed++;
         pr_curr_global[v] = PAGE_RANK(pr_next_global[v]);
         pr_next_global[v] = 0.0;
         v++;
