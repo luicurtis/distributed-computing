@@ -6,4 +6,4 @@
 #SBATCH --partition=slow
 #SBATCH --nodelist=cs-cloud-02
 
-srun /home/cwlui/cmpt431/assignment4/page_rank_push_parallel_atomic --nThreads 4 --nIterations 100 --inputFile /scratch/input_graphs/web-Google --strategy 4 --granularity 100
+srun /home/cwlui/cmpt431/assignment4/page_rank_push_parallel_atomic --nThreads 4 --nIterations 100 --inputFile /scratch/input_graphs/roadNet-CA --strategy 3 --granularity 100
