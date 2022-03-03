@@ -24,15 +24,17 @@ class OneLockQueue {
     my_allocator_.initialize(t_my_allocator_size, sizeof(Node<T>));
     // Initialize the queue head or tail here
     Node<T>* new_node = (Node<T>*)my_allocator_.newNode();
+    new_node->next = nullptr;
     q_head = new_node;
     q_tail = new_node;
   }
 
   void enqueue(T value) {
-    mtx.lock();
     Node<T>* new_node = (Node<T>*)my_allocator_.newNode();
     new_node->value = value;
     new_node->next = nullptr;
+
+    mtx.lock();
     q_tail->next = new_node;
     q_tail = new_node;
     mtx.unlock();
@@ -49,8 +51,8 @@ class OneLockQueue {
     }
     *value = new_head->value;
     q_head = new_head;
-    my_allocator_.freeNode(sentinel);
     mtx.unlock();
+    my_allocator_.freeNode(sentinel);
     return true;
   }
 
