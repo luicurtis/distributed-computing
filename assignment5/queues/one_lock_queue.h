@@ -7,6 +7,8 @@ class Node {
  public:
   long value;
   Node<T>* next;
+
+  Node() : value(0), next(nullptr) {}
 };
 
 template <class T>
