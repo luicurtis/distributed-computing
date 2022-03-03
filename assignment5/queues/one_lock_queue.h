@@ -5,7 +5,7 @@
 template <class T>
 class Node {
  public:
-  long value;
+  T value;
   Node<T>* next;
 
   Node() : value(0), next(nullptr) {}
