@@ -1,0 +1,18 @@
+Using OneLockQueue
+Pre-allocate with 100000000 elements
+Using Allocator
+Allocating objects of size : 16
+n_producers = 2
+n_consumers = 2
+Producer data
+thread_id, produced, total_time
+0, 16370506, 30.0002
+1, 16206421, 30.0002
+Consumer data
+thread_id, consumed, failed, total_time
+0, 16280182, 25752332, 30.0001
+1, 16296743, 25504743, 30.0001
+Total produced = 32576927
+Total consumed = 32576925
+Total failed = 51257075
+Total throughput = 2171795

@@ -1,0 +1,21 @@
+Using NonBlockingQueue
+Pre-allocate with 100000000 elements
+Using Allocator
+Allocating objects of size : 16
+n_producers = 2
+n_consumers = 2
+Producer data
+thread_id, produced, total_time
+0, 24496242, 30.0007
+1, 24489601, 30.0006
+Consumer data
+thread_id, consumed, failed, total_time
+0, 23552185, 51515666, 30.0005
+1, 25433657, 54298088, 30.0005
+Total produced = 48985843
+Total consumed = 48985842
+Total failed = 105813754
+Total throughput = 3265722
+slurmstepd-cs-cloud-01: error: Job 47973 hit memory limit at least once during execution. This may or may not result in some failure.
+srun: error: cs-cloud-01: task 0: Out Of Memory
+slurmstepd-cs-cloud-01: error: Job 47973 hit memory limit at least once during execution. This may or may not result in some failure.
