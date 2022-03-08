@@ -1,0 +1,25 @@
+Using TwoLockQueue
+Pre-allocate with 100000000 elements
+Using Allocator
+Allocating objects of size : 16
+n_producers = 4
+n_consumers = 4
+Producer data
+thread_id, produced, total_time
+0, 9888736, 30.0008
+1, 10426009, 30.0008
+2, 9265937, 30.0006
+3, 9723863, 30.0007
+Consumer data
+thread_id, consumed, failed, total_time
+0, 10015012, 6750270, 30.0006
+1, 9988595, 6688813, 30.0005
+2, 9757935, 6522159, 30.0005
+3, 9542999, 6305319, 30.0003
+Total produced = 39304545
+Total consumed = 39304541
+Total failed = 26266561
+Total throughput = 2620302
+slurmstepd-cs-cloud-01: error: Job 48023 hit memory limit at least once during execution. This may or may not result in some failure.
+srun: error: cs-cloud-01: task 0: Out Of Memory
+slurmstepd-cs-cloud-01: error: Job 48023 hit memory limit at least once during execution. This may or may not result in some failure.

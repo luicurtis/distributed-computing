@@ -5,4 +5,4 @@
 #SBATCH --mem=2G
 #SBATCH --partition=slow
 
-srun /home/cwlui/cmpt431/assignment5/non_blocking_queue_throughput --n_producers 2 --n_consumers 2 --seconds 30 --init_allocator 100000000
+srun /home/cwlui/cmpt431/assignment5/one_lock_blocking_queue_throughput --n_producers 4 --n_consumers 4 --seconds 30 --init_allocator 100000000

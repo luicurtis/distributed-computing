@@ -1,0 +1,22 @@
+Using NonBlockingQueue
+Pre-allocate with 100000000 elements
+Using Allocator
+Allocating objects of size : 16
+n_producers = 4
+n_consumers = 4
+Producer data
+thread_id, produced, total_time
+0, 5902081, 30.0004
+1, 5919536, 30.0003
+2, 5867485, 30.0003
+3, 7004481, 30.0002
+Consumer data
+thread_id, consumed, failed, total_time
+0, 9252392, 15015711, 30.0001
+1, 5230414, 14313258, 30.0001
+2, 5158365, 14549822, 29.9868
+3, 5052412, 14409699, 29.9748
+Total produced = 24693583
+Total consumed = 24693583
+Total failed = 58288490
+Total throughput = 1646238
