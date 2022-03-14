@@ -1,0 +1,3 @@
+Data size = 40, Trials = 10
+Avg my_bcast time = 0.000015
+Avg MPI_Bcast time = 0.000008
