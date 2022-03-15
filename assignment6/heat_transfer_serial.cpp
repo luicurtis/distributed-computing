@@ -102,20 +102,24 @@ void heat_transfer_calculation_serial(uint size, TemperatureArray* T, uint steps
 
   // Print these statistics for each thread 
   std::cout << "rank, start_column, end_column, time_taken\n";
-  std::cout << "0, 0, " << size-1 << ", " << std::setprecision(TIME_PRECISION) << time_taken << "\n";
- 
+  std::cout << "0, 0, " << size-1 << ", " << std::setprecision(TIME_PRECISION)
+              << time_taken<< "\n";
+  
   uint step = size/6;
   uint position = 0;
   for (uint x = 0; x < 6; x++) {
-      std::cout<< "Temp[" << position << "," << position << "]=" << T->temp(position,position) << "\n";
+      std::cout << "Temp[" << position << "," << position << "]=" << T->temp(position,position) << "\n";
       position += step;
   } 
   
-  // Print temparature at select boundary points;  
-  std::cout<< "Temp[" << endx << "," << endx << "]=" << T->temp(endx,endx) << "\n";
+  // Print temparature at select boundary points;
+  for (uint i = 0; i < number_of_threads; i++) {
+      std::cout << "Temp[" << endx[i] << "," << endx[i] << "]=" << T->temp(endx[i],endx[i]) << "\n";
+  }
 
   //*------------------------------------------------------------------------
   time_taken = serial_timer.stop();
+
   std::cout << "Time taken (in seconds) : " << std::setprecision(TIME_PRECISION)
             << time_taken << "\n";
 }
