@@ -177,5 +177,7 @@ int main(int argc, char *argv[]) {
   }
 
   curve_area_calculation_parallel(n_points, a, b, r_seed, world_rank, world_size);
+
+  MPI_Finalize();
   return 0;
 }
