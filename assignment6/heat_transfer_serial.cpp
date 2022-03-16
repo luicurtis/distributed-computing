@@ -112,10 +112,10 @@ void heat_transfer_calculation_serial(uint size, TemperatureArray* T, uint steps
       position += step;
   } 
   
-  // Print temparature at select boundary points;
-  for (uint i = 0; i < number_of_threads; i++) {
-      std::cout << "Temp[" << endx[i] << "," << endx[i] << "]=" << T->temp(endx[i],endx[i]) << "\n";
-  }
+  // // Print temparature at select boundary points;
+  // for (uint i = 0; i < number_of_threads; i++) {
+  //     std::cout << "Temp[" << endx[i] << "," << endx[i] << "]=" << T->temp(endx[i],endx[i]) << "\n";
+  // }
 
   //*------------------------------------------------------------------------
   time_taken = serial_timer.stop();
