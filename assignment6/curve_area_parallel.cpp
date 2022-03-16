@@ -41,7 +41,6 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
 
   // Dividing up n vertices on P processes.
   // Total number of processes is world_size. This process rank is world_rank
-
   int min_points_per_process = n / world_size;
   int excess_points = n % world_size;
   int points_to_be_generated = 0;
@@ -63,71 +62,42 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
   local_time_taken = local_timer.stop();
 
   // --- synchronization phase start ---
-  std::vector<unsigned long> p_local_curve_points(world_size, 0);
-  std::vector<double> p_local_time_taken(world_size, 0.0);
+  unsigned long global_curve_points = 0;
 
   if (world_rank == 0) {
-    p_local_curve_points[0] = local_curve_points;
-    p_local_time_taken[0] = local_time_taken;
+    global_curve_points += local_curve_points;
 
     // get process' curve count
     unsigned long p_curve_count = 0;
     for (int i = 1; i < world_size; i++) {
       MPI_Recv(&p_curve_count, 1, MPI_UNSIGNED_LONG, i, 0, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
-      p_local_curve_points[i] = p_curve_count;
-    }
-
-    // get process' local times
-    double time_taken = 0.0;
-    for (int i = 1; i < world_size; i++) {
-      MPI_Recv(&time_taken, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD,
-               MPI_STATUS_IGNORE);
-      p_local_time_taken[i] = time_taken;
+      global_curve_points += p_curve_count;
     }
   } else {
     //  send curve points data to root
     MPI_Send(&local_curve_points, 1, MPI_UNSIGNED_LONG, 0, 0, MPI_COMM_WORLD);
-    // send local time taken to root
-    MPI_Send(&local_time_taken, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
   }
   // --- synchronization phase end -----
+
   if (world_rank == 0) {
+    // print process statistics and other results
     double global_time_taken = global_timer.stop();
-    std::vector<unsigned long> n_points_process(world_size, 0);
-    unsigned long global_curve_points = 0;
-
-    // determine the number of points that was assigned to each process and sum
-    // up local curve points
-    for (int i = 0; i < world_size; i++) {
-      if (i < excess_points) {
-        n_points_process[i] = min_points_per_process + 1;
-
-      } else {
-        n_points_process[i] = min_points_per_process;
-      }
-
-      global_curve_points += p_local_curve_points[i];
-    }
-
-    std::cout << "rank, points_generated, curve_points, time_taken\n";
-    for (int i = 0; i < world_size; i++) {
-      std::cout << i << ", " << n_points_process[i] << ", "
-                << p_local_curve_points[i] << ", "
-                << std::setprecision(TIME_PRECISION) << p_local_time_taken[i]
-                << "\n";
-    }
-
     double final_area_value = 4.0 * (double)global_curve_points / (double)n;
 
-    std::cout << "Total points generated : " << n << "\n";
-    std::cout << "Total points in curve : " << global_curve_points << "\n";
-    std::cout << "Area : " << std::setprecision(VAL_PRECISION)
-              << final_area_value << "\n";
-    std::cout << "Time taken (in seconds) : "
-              << std::setprecision(TIME_PRECISION) << global_time_taken << "\n";
+    printf("%d, %d, %lu, %.*g\n", world_rank, points_to_be_generated,
+           local_curve_points, TIME_PRECISION, local_time_taken);
+
+    // FIXME: Check piazza @190 for correct naming of stat output for Area/Result 
+    printf("Total points generated : %lu\n", n);
+    printf("Total points in curve : %lu\n", global_curve_points);
+    printf("Area : %.*g\n", VAL_PRECISION, final_area_value);
+    printf("Time taken (in seconds) : %.*g\n", TIME_PRECISION,
+           global_time_taken);
   } else {
-    // TODO: print process statistics individually for each thread
+    // print process statistics
+    printf("%d, %d, %lu, %.*g\n", world_rank, points_to_be_generated,
+           local_curve_points, TIME_PRECISION, local_time_taken);
   }
 }
 
@@ -170,13 +140,16 @@ int main(int argc, char *argv[]) {
   }
 
   if (world_rank == 0) {
+    std::cout << "Number of processes : " << world_size << "\n";
     std::cout << "Number of points : " << n_points << "\n";
     std::cout << "A : " << a << "\n"
               << "B : " << b << "\n";
     std::cout << "Random Seed : " << r_seed << "\n";
+    std::cout << "rank, points_generated, curve_points, time_taken\n";
   }
 
-  curve_area_calculation_parallel(n_points, a, b, r_seed, world_rank, world_size);
+  curve_area_calculation_parallel(n_points, a, b, r_seed, world_rank,
+                                  world_size);
 
   MPI_Finalize();
   return 0;
