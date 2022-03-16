@@ -107,6 +107,17 @@ void heat_transfer_calculation_parallel(uint size, TemperatureArray *T,
   uint startx = 0;
   uint endx = size - 1;
 
+  min_columns = size / world_size;
+  excess_columns = size % world_size;
+  if (world_rank < excess_columns) {
+    startx = world_rank * (min_columns + 1);
+    endx = startx + min_columns;
+  }
+  else {
+    startx = (excess_columns * (min_columns + 1)) + ((world_rank-excess_columns) * min_columns);
+    endx = startx + min_columns - 1;
+  }
+
   serial_timer.start();
   //*------------------------------------------------------------------------
 
