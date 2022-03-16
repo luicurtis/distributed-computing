@@ -1,7 +1,9 @@
+#include <mpi.h>
 #include <stdlib.h>
 
 #include <iomanip>
 #include <iostream>
+#include <stdexcept>
 #include <thread>
 
 #include "core/utils.h"
@@ -97,8 +99,9 @@ inline void heat_transfer_calculation(uint size, uint start, uint end,
   *time_taken = t1.stop();
 }
 
-void heat_transfer_calculation_serial(uint size, TemperatureArray *T,
-                                      uint steps) {
+void heat_transfer_calculation_parallel(uint size, TemperatureArray *T,
+                                        uint steps, int world_rank,
+                                        int world_size) {
   timer serial_timer;
   double time_taken = 0.0;
   uint startx = 0;
@@ -123,10 +126,10 @@ void heat_transfer_calculation_serial(uint size, TemperatureArray *T,
   }
 
   // Print temparature at select boundary points;
-  for (uint i = 0; i < number_of_threads; i++) {
-    std::cout << "Temp[" << endx[i] << "," << endx[i]
-              << "]=" << T->temp(endx[i], endx[i]) << "\n";
-  }
+  // for (uint i = 0; i < number_of_threads; i++) {
+  //   std::cout << "Temp[" << endx[i] << "," << endx[i]
+  //             << "]=" << T->temp(endx[i], endx[i]) << "\n";
+  // }
 
   //*------------------------------------------------------------------------
   time_taken = serial_timer.stop();
@@ -158,31 +161,42 @@ int main(int argc, char *argv[]) {
   double Cy = cl_options["iCY"].as<double>();
   uint steps = cl_options["tSteps"].as<uint>();
 
+  MPI_Init(NULL, NULL);
+  int world_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+  int world_size;
+  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
   // check for valid input
   if (grid_size <= 0 || steps <= 0) {
     throw std::invalid_argument(
         "The commandline arguments: --gSize and --tSteps must be "
         "at least 1.\n");
   }
-  
-  std::cout << "Number of processes : 1"
-            << "\n";
-  std::cout << "Grid Size : " << grid_size << "x" << grid_size << "\n";
-  std::cout << "Cx : " << Cx << "\n"
-            << "Cy : " << Cy << "\n";
-  std::cout << "Temperature in the middle of grid : " << init_temp << "\n";
-  std::cout << "Time Steps : " << steps << "\n";
 
-  std::cout << "Initializing Temperature Array..."
-            << "\n";
+  if (world_rank == 0) {
+    std::cout << "Number of processes : 1"
+              << "\n";
+    std::cout << "Grid Size : " << grid_size << "x" << grid_size << "\n";
+    std::cout << "Cx : " << Cx << "\n"
+              << "Cy : " << Cy << "\n";
+    std::cout << "Temperature in the middle of grid : " << init_temp << "\n";
+    std::cout << "Time Steps : " << steps << "\n";
+
+    std::cout << "Initializing Temperature Array..."
+              << "\n";
+  }
+
   TemperatureArray *T = new TemperatureArray(grid_size, Cx, Cy, init_temp);
   if (!T) {
     std::cout << "Cannot Initialize Temperature Array...Terminating"
               << "\n";
     return 2;
   }
-  heat_transfer_calculation_serial(grid_size, T, steps);
+  heat_transfer_calculation_parallel(grid_size, T, steps, world_rank,
+                                     world_size);
 
+  MPI_Finalize();
   delete T;
   return 0;
 }
