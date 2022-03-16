@@ -157,6 +157,14 @@ int main(int argc, char *argv[]) {
   double Cx = cl_options["iCX"].as<double>();
   double Cy = cl_options["iCY"].as<double>();
   uint steps = cl_options["tSteps"].as<uint>();
+
+  // check for valid input
+  if (grid_size <= 0 || steps <= 0) {
+    throw std::invalid_argument(
+        "The commandline arguments: --gSize and --tSteps must be "
+        "at least 1.\n");
+  }
+  
   std::cout << "Number of processes : 1"
             << "\n";
   std::cout << "Grid Size : " << grid_size << "x" << grid_size << "\n";
