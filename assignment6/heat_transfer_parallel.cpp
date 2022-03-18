@@ -230,13 +230,13 @@ void heat_transfer_calculation_parallel(uint size, TemperatureArray *T,
     if (position >= startx && position <= endx) {
       // std::cout << "Temp[" << position << "," << position  << "]=" <<
       // T->temp(position, position) << "\n";
-      printf("Temp[%d,%d]=%g\n", position, position,
+      printf("Temp[%d,%d]=%.*g\n", position, position, 5,
              T->temp(position, position));
     }
     position += step;
   }
   // Print temparature at select boundary points;
-  printf("Temp[%d,%d]=%g\n", endx, endx, T->temp(endx, endx));
+  printf("Temp[%d,%d]=%.*g\n", endx, endx, 5, T->temp(endx, endx));
 
   MPI_Send(&turn, 1, MPI_INT, (world_rank + 1) % world_size, 0, MPI_COMM_WORLD);
 
@@ -291,8 +291,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (world_rank == 0) {
-    std::cout << "Number of processes : 1"
-              << "\n";
+    std::cout << "Number of processes : " << world_size << "\n";
     std::cout << "Grid Size : " << grid_size << "x" << grid_size << "\n";
     std::cout << "Cx : " << Cx << "\n"
               << "Cy : " << Cy << "\n";
