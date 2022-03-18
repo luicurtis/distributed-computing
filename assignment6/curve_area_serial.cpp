@@ -42,7 +42,7 @@ void curve_area_calculation_serial(unsigned long n, float a, float b, uint r_see
   time_taken = serial_timer.stop();
 
   std::cout << "rank, points_generated, curve_points, time_taken\n";
-  std::cout << "1, " << n << ", "
+  std::cout << "0, " << n << ", "
               << curve_points << ", " << std::setprecision(TIME_PRECISION)
               << time_taken << "\n";
 
