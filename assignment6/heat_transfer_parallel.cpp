@@ -111,7 +111,7 @@ inline void heat_transfer_calculation(uint size, uint start, uint end,
       if (world_rank < world_size - 1) {  // not last process
         // Send my column "end" to the right process world_rank+1
         for (int i = 0; i < size; i++) {
-          send_temp = T->temp(i, end);
+          send_temp = T->temp(end, i);
           MPI_Send(&send_temp, 1, MPI_DOUBLE, world_rank + 1, world_rank,
                    MPI_COMM_WORLD);
         }
@@ -121,7 +121,7 @@ inline void heat_transfer_calculation(uint size, uint start, uint end,
         for (int i = 0; i < size; i++) {
           MPI_Recv(&new_temp, 1, MPI_DOUBLE, world_rank + 1, world_rank + 1,
                    MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-          T->write(i, end + 1, new_temp);
+          T->write(end + 1, i, new_temp);
         }
       }
       if (world_rank > 0) {  // not first process
@@ -130,12 +130,12 @@ inline void heat_transfer_calculation(uint size, uint start, uint end,
         for (int i = 0; i < size; i++) {
           MPI_Recv(&new_temp, 1, MPI_DOUBLE, world_rank - 1, world_rank - 1,
                    MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-          T->write(i, start - 1, new_temp);
+          T->write(start - 1, i, new_temp);
         }
 
         // Send my column "start" to the left process world_rank-1
         for (int i = 0; i < size; i++) {
-          send_temp = T->temp(i, start);
+          send_temp = T->temp(start, i);
           MPI_Send(&send_temp, 1, MPI_DOUBLE, world_rank - 1, world_rank,
                    MPI_COMM_WORLD);
         }
@@ -148,12 +148,12 @@ inline void heat_transfer_calculation(uint size, uint start, uint end,
         for (int i = 0; i < size; i++) {
           MPI_Recv(&new_temp, 1, MPI_DOUBLE, world_rank - 1, world_rank - 1,
                    MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-          T->write(i, start - 1, new_temp);
+          T->write(start - 1, i, new_temp);
         }
 
         // Send my column "start" to the left process world_rank-1
         for (int i = 0; i < size; i++) {
-          send_temp = T->temp(i, start);
+          send_temp = T->temp(start, i);
           MPI_Send(&send_temp, 1, MPI_DOUBLE, world_rank - 1, world_rank,
                    MPI_COMM_WORLD);
         }
@@ -161,7 +161,7 @@ inline void heat_transfer_calculation(uint size, uint start, uint end,
       if (world_rank < world_size - 1) {  // not last process
         // Send my column "end" to the right process world_rank+1
         for (int i = 0; i < size; i++) {
-          send_temp = T->temp(i, end);
+          send_temp = T->temp(end, i);
           MPI_Send(&send_temp, 1, MPI_DOUBLE, world_rank + 1, world_rank,
                    MPI_COMM_WORLD);
         }
@@ -171,7 +171,7 @@ inline void heat_transfer_calculation(uint size, uint start, uint end,
         for (int i = 0; i < size; i++) {
           MPI_Recv(&new_temp, 1, MPI_DOUBLE, world_rank + 1, world_rank + 1,
                    MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-          T->write(i, end + 1, new_temp);
+          T->write(end + 1, i, new_temp);
         }
       }
     }  // odd rank
