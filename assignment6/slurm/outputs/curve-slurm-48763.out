@@ -1,0 +1,14 @@
+Number of processes : 4
+Number of points : 1000000000
+A : 3.2
+B : 7.1
+Random Seed : 37
+rank, points_generated, curve_points, time_taken
+1, 250000000, 74827657, 10.017
+3, 250000000, 74829396, 10.018
+2, 250000000, 74831320, 10.02
+0, 250000000, 74830339, 10.025
+Total points generated : 1000000000
+Total points in curve : 299318712
+Area : 1.197274848
+Time taken (in seconds) : 10.025

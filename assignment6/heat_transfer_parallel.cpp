@@ -89,11 +89,6 @@ inline void heat_transfer_calculation(uint size, uint start, uint end,
   t1.start();
   uint stepcount;
 
-  // Create datatype for 1 column of temp array
-  // MPI_Datatype col;
-  // MPI_Type_vector(size, 1, size, MPI_DOUBLE, &col);
-  // MPI_Type_commit(&col);
-
   for (stepcount = 1; stepcount <= steps; stepcount++) {
     // Compute the Temperature Array values Curr[][] in the slice allocated to
     // this process from Prev[][]
