@@ -86,9 +86,7 @@ void curve_area_calculation_parallel(unsigned long n, float a, float b,
     double final_area_value = 4.0 * (double)global_curve_points / (double)n;
 
     printf("%d, %d, %lu, %.*g\n", world_rank, points_to_be_generated,
-           local_curve_points, TIME_PRECISION, local_time_taken);
-
-    // FIXME: Check piazza @190 for correct naming of stat output for Area/Result 
+           local_curve_points, TIME_PRECISION, local_time_taken); 
     printf("Total points generated : %lu\n", n);
     printf("Total points in curve : %lu\n", global_curve_points);
     printf("Area : %.*g\n", VAL_PRECISION, final_area_value);
